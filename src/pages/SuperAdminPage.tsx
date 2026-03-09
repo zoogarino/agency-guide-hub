@@ -194,11 +194,6 @@ function AgencyManagement() {
                   <td className="px-6 py-4 text-sm text-muted-foreground">{a.phone}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{a.email}</td>
                   <td className="px-6 py-4">
-                    <Badge variant={statusColor(a.status)} className={`text-xs ${a.status === "De-Activated" ? "bg-destructive/10 text-destructive" : ""}`}>
-                      {a.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>

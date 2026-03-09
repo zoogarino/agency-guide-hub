@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/trip-manager" element={<TripManagerPage />} />
           <Route path="/map-settings" element={<MapSettingsPage />} />
           <Route path="/request-pin" element={<RequestPinPage />} />
-          <Route path="/subscription" element={<SubscriptionPage />} />
+          
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/super-admin" element={<SuperAdminPage />} />
           {/* Legacy redirect */}
