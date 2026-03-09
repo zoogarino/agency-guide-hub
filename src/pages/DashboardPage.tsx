@@ -42,8 +42,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{stat.label}</p>
                       <p className="text-3xl font-bold font-heading mt-1">{stat.value}</p>
-                      <p className={`text-xs mt-2 flex items-center gap-1 ${stat.warning ? "text-warning" : "text-primary"}`}>
-                        {stat.warning && <AlertTriangle className="h-3 w-3" />}
+                      <p className="text-xs mt-2 text-primary">
                         {stat.change}
                       </p>
                     </div>
