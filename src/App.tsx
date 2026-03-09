@@ -9,7 +9,7 @@ import ClientsPage from "./pages/ClientsPage";
 import TripManagerPage from "./pages/TripManagerPage";
 import MapSettingsPage from "./pages/MapSettingsPage";
 import RequestPinPage from "./pages/RequestPinPage";
-import SubscriptionPage from "./pages/SubscriptionPage";
+
 import SettingsPage from "./pages/SettingsPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
