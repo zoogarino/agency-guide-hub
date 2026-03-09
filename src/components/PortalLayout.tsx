@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  CreditCard,
   Cog,
 } from "lucide-react";
 import pgnLogo from "@/assets/pgn-logo.png";
@@ -20,7 +19,6 @@ const navItems = [
   { label: "Trip Manager", icon: Map, path: "/trip-manager" },
   { label: "Map Settings", icon: Settings, path: "/map-settings" },
   { label: "Request a Pin", icon: MapPin, path: "/request-pin" },
-  { label: "Subscription", icon: CreditCard, path: "/subscription" },
   { label: "Settings", icon: Cog, path: "/settings" },
 ];
 

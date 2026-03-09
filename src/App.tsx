@@ -9,7 +9,7 @@ import ClientsPage from "./pages/ClientsPage";
 import TripManagerPage from "./pages/TripManagerPage";
 import MapSettingsPage from "./pages/MapSettingsPage";
 import RequestPinPage from "./pages/RequestPinPage";
-import SubscriptionPage from "./pages/SubscriptionPage";
+
 import SettingsPage from "./pages/SettingsPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/trip-manager" element={<TripManagerPage />} />
           <Route path="/map-settings" element={<MapSettingsPage />} />
           <Route path="/request-pin" element={<RequestPinPage />} />
-          <Route path="/subscription" element={<SubscriptionPage />} />
+          
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/super-admin" element={<SuperAdminPage />} />
           {/* Legacy redirect */}

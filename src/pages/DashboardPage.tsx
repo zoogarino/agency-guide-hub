@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, CreditCard, AlertTriangle } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -7,7 +7,6 @@ const stats = [
   { label: "Total Clients", value: "24", icon: Users, change: "+3 this week", warning: false },
   { label: "Active Trips", value: "12", icon: Map, change: "2 starting soon", warning: false },
   { label: "Pending Pin Requests", value: "3", icon: MapPin, change: "1 under review", warning: false },
-  { label: "Subscription Status", value: "Active", icon: CreditCard, change: "Renews in 5 days", warning: true },
 ];
 
 const recentActivity = [
@@ -29,7 +28,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -43,13 +42,12 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">{stat.label}</p>
                       <p className="text-3xl font-bold font-heading mt-1">{stat.value}</p>
-                      <p className={`text-xs mt-2 flex items-center gap-1 ${stat.warning ? "text-warning" : "text-primary"}`}>
-                        {stat.warning && <AlertTriangle className="h-3 w-3" />}
+                      <p className="text-xs mt-2 text-primary">
                         {stat.change}
                       </p>
                     </div>
-                    <div className={`rounded-xl p-3 ${stat.warning ? "bg-warning/10" : "bg-primary/10"}`}>
-                      <stat.icon className={`h-5 w-5 ${stat.warning ? "text-warning" : "text-primary"}`} />
+                    <div className="rounded-xl p-3 bg-primary/10">
+                      <stat.icon className="h-5 w-5 text-primary" />
                     </div>
                   </div>
                 </CardContent>
