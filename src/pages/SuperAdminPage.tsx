@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, Eye, Edit, Ban, Save, Send, Search,
-  LayoutDashboard, Building2, CreditCard, LogOut,
+  LayoutDashboard, Building2, LogOut,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
