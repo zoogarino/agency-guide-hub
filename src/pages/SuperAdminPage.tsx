@@ -104,59 +104,6 @@ function AgencyManagement() {
                 <div className="space-y-2"><Label>Confirm Password</Label><Input type="password" placeholder="••••••••" /></div>
               </div>
 
-              <div className="border-t pt-4 space-y-4">
-                <h3 className="font-heading text-sm font-semibold">Plan Assignment</h3>
-                <div className="space-y-2">
-                  <Label>Select Existing Plan</Label>
-                  <Select>
-                    <SelectTrigger><SelectValue placeholder="Choose plan or configure manually" /></SelectTrigger>
-                    <SelectContent>
-                      {mockPlans.map((p) => <SelectItem key={p.name} value={p.name}>{p.name} — {p.price}</SelectItem>)}
-                      <SelectItem value="manual">Configure Manual Plan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Plan Name</Label><Input placeholder="Custom Plan" /></div>
-                  <div className="space-y-2"><Label>Amount (€)</Label><Input type="number" placeholder="199" /></div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Payment Cycle (days)</Label>
-                    <Select defaultValue="30">
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 days</SelectItem>
-                        <SelectItem value="180">180 days</SelectItem>
-                        <SelectItem value="365">365 days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2"><Label>Start Date</Label><Input type="date" /></div>
-                  <div className="space-y-2"><Label>Trip Limit</Label><Input type="number" placeholder="30" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Renewal Buffer Days</Label><Input type="number" placeholder="7" /></div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>Trip Sharing</Label>
-                    <Switch checked={tripSharing} onCheckedChange={setTripSharing} />
-                  </div>
-                  {tripSharing && (
-                    <div className="ml-4 space-y-3 border-l-2 border-primary/20 pl-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm">WhatsApp</Label>
-                        <Switch checked={whatsapp} onCheckedChange={setWhatsapp} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm">Email</Label>
-                        <Switch checked={emailSharing} onCheckedChange={setEmailSharing} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
 
               <div className="flex gap-3 pt-2">
                 <Button className="flex-1" onClick={() => { setAddOpen(false); toast({ title: "Agency saved" }); }}>
