@@ -32,7 +32,6 @@ function AdminSidebar({ section, setSection }: { section: string; setSection: (s
   const navigate = useNavigate();
   const items = [
     { label: "Agency Management", icon: Building2, key: "agencies" },
-    { label: "Subscription Plans", icon: CreditCard, key: "plans" },
   ];
   return (
     <aside className="flex flex-col bg-sidebar text-sidebar-foreground w-[250px]">
