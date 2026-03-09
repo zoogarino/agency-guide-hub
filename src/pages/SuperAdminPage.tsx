@@ -69,10 +69,8 @@ function AgencyManagement() {
   const [whatsapp, setWhatsapp] = useState(false);
   const [emailSharing, setEmailSharing] = useState(false);
 
-  const statusColor = (s: string) => {
-    if (s === "Active") return "default";
-    return "secondary";
-  };
+
+
 
   return (
     <div className="space-y-6">
