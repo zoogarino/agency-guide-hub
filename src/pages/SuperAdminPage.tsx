@@ -21,10 +21,10 @@ import { useNavigate } from "react-router-dom";
 import pgnLogo from "@/assets/pgn-logo.png";
 
 const mockAgencies = [
-  { serial: 1, name: "Joker Travel", phone: "+32 2 123 4567", email: "info@jokertravel.be", status: "Active" },
-  { serial: 2, name: "Desert Adventures", phone: "+264 61 234 567", email: "hello@desertadv.com", status: "Active" },
-  { serial: 3, name: "Safari Kings", phone: "+44 20 7946 0958", email: "admin@safarikings.uk", status: "De-Activated" },
-  { serial: 4, name: "Namibia Direct", phone: "+264 61 987 654", email: "ops@namibiadirect.com", status: "De-Active" },
+  { serial: 1, name: "Joker Travel", phone: "+32 2 123 4567", email: "info@jokertravel.be" },
+  { serial: 2, name: "Desert Adventures", phone: "+264 61 234 567", email: "hello@desertadv.com" },
+  { serial: 3, name: "Safari Kings", phone: "+44 20 7946 0958", email: "admin@safarikings.uk" },
+  { serial: 4, name: "Namibia Direct", phone: "+264 61 987 654", email: "ops@namibiadirect.com" },
 ];
 
 
