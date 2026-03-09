@@ -182,7 +182,7 @@ function AgencyManagement() {
                 <th className="px-6 py-3 font-medium">Business Name</th>
                 <th className="px-6 py-3 font-medium">Phone</th>
                 <th className="px-6 py-3 font-medium">Email</th>
-                <th className="px-6 py-3 font-medium">Subscription Status</th>
+                
                 <th className="px-6 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
