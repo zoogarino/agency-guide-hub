@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, CreditCard, AlertTriangle } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -7,7 +7,6 @@ const stats = [
   { label: "Total Clients", value: "24", icon: Users, change: "+3 this week", warning: false },
   { label: "Active Trips", value: "12", icon: Map, change: "2 starting soon", warning: false },
   { label: "Pending Pin Requests", value: "3", icon: MapPin, change: "1 under review", warning: false },
-  { label: "Subscription Status", value: "Active", icon: CreditCard, change: "Renews in 5 days", warning: true },
 ];
 
 const recentActivity = [
