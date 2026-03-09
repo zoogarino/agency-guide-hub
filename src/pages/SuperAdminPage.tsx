@@ -27,13 +27,6 @@ const mockAgencies = [
   { serial: 4, name: "Namibia Direct", phone: "+264 61 987 654", email: "ops@namibiadirect.com", status: "De-Active" },
 ];
 
-const mockPlans = [
-  { name: "Per-Client (Starter)", active: 12, expired: 3, price: "€35/client" },
-  { name: "Growth — 10 clients", active: 8, expired: 2, price: "€99/mo" },
-  { name: "Growth — 30 clients", active: 15, expired: 5, price: "€199/mo" },
-  { name: "Growth — Unlimited", active: 4, expired: 1, price: "€349/mo" },
-  { name: "Hybrid (Pro)", active: 6, expired: 2, price: "€49/mo + €15/client" },
-];
 
 function AdminSidebar({ section, setSection }: { section: string; setSection: (s: string) => void }) {
   const navigate = useNavigate();
