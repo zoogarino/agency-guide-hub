@@ -46,8 +46,8 @@ export default function DashboardPage() {
                         {stat.change}
                       </p>
                     </div>
-                    <div className={`rounded-xl p-3 ${stat.warning ? "bg-warning/10" : "bg-primary/10"}`}>
-                      <stat.icon className={`h-5 w-5 ${stat.warning ? "text-warning" : "text-primary"}`} />
+                    <div className="rounded-xl p-3 bg-primary/10">
+                      <stat.icon className="h-5 w-5 text-primary" />
                     </div>
                   </div>
                 </CardContent>

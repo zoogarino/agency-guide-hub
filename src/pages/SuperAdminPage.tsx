@@ -173,7 +173,7 @@ export default function SuperAdminPage() {
         </header>
         <div className="p-8">
           <motion.div key={section} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {section === "agencies" ? <AgencyManagement /> : <SubscriptionPlans />}
+            <AgencyManagement />
           </motion.div>
         </div>
       </main>
