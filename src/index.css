@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 220 20% 12%;
+
+    --card: 205 100% 97%;
+    --card-foreground: 220 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
+
+    --primary: 187 100% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 205 30% 94%;
+    --secondary-foreground: 220 20% 20%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 14% 46%;
+
+    --accent: 187 60% 92%;
+    --accent-foreground: 187 100% 25%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 187 100% 42%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 210 20% 75%;
+    --sidebar-primary: 187 100% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 187 100% 42%;
+
+    --chart-1: 187 100% 42%;
+    --chart-2: 187 60% 65%;
+    --chart-3: 220 20% 50%;
+    --chart-4: 36 90% 55%;
+    --chart-5: 0 72% 51%;
+
+    --success: 152 60% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 90% 55%;
+    --warning-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-heading {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}

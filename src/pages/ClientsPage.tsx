@@ -1,0 +1,165 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Copy, Mail, Search, ExternalLink } from "lucide-react";
+import PortalLayout from "@/components/PortalLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+const mockClients = [
+  { id: 1, name: "Sarah Miller", email: "sarah@example.com", trip: "Etosha Explorer", date: "2026-02-20", link: "app.pocketguide-namibia.com/share-trip/abc123", status: "Active" },
+  { id: 2, name: "John Doe", email: "john@example.com", trip: "Skeleton Coast Adventure", date: "2026-02-18", link: "app.pocketguide-namibia.com/share-trip/def456", status: "Active" },
+  { id: 3, name: "Hans Weber", email: "hans@example.com", trip: "Sossusvlei Dunes", date: "2026-02-15", link: "app.pocketguide-namibia.com/share-trip/ghi789", status: "Inactive" },
+  { id: 4, name: "Marie Dupont", email: "marie@example.com", trip: "Fish River Canyon", date: "2026-02-10", link: "app.pocketguide-namibia.com/share-trip/jkl012", status: "Active" },
+  { id: 5, name: "Tom Brown", email: "tom@example.com", trip: "—", date: "2026-02-08", link: "", status: "Inactive" },
+];
+
+const trips = ["Etosha Explorer", "Skeleton Coast Adventure", "Sossusvlei Dunes", "Fish River Canyon", "Windhoek City Tour"];
+
+export default function ClientsPage() {
+  const { toast } = useToast();
+  const [search, setSearch] = useState("");
+  const [generatedLink, setGeneratedLink] = useState("");
+
+  const filtered = mockClients.filter(
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleGenerate = () => {
+    const id = Math.random().toString(36).substring(2, 10);
+    setGeneratedLink(`app.pocketguide-namibia.com/share-trip/${id}`);
+  };
+
+  const handleCopy = (link: string) => {
+    navigator.clipboard.writeText(`https://${link}`);
+    toast({ title: "Link copied to clipboard" });
+  };
+
+  return (
+    <PortalLayout>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-heading text-2xl font-bold">Clients</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage your client accounts and trip access</p>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-2" /> Create New Client</Button>
+            </SheetTrigger>
+            <SheetContent className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="font-heading">New Client</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-4 pt-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>First Name</Label><Input placeholder="Jane" /></div>
+                  <div className="space-y-2"><Label>Last Name</Label><Input placeholder="Smith" /></div>
+                </div>
+                <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
+                <div className="space-y-2"><Label>WhatsApp Number</Label><Input placeholder="+32 470 123 456" /></div>
+                <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
+                <div className="space-y-2">
+                  <Label>Assign Trip</Label>
+                  <Select>
+                    <SelectTrigger><SelectValue placeholder="Select a trip" /></SelectTrigger>
+                    <SelectContent>
+                      {trips.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select defaultValue="active">
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleGenerate} className="w-full">Generate Access Link</Button>
+
+                {generatedLink && (
+                  <Card className="border-none">
+                    <CardContent className="p-4 space-y-3">
+                      <Label className="text-xs text-muted-foreground">Shareable Link</Label>
+                      <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm font-mono break-all">
+                        <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
+                        {generatedLink}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleCopy(generatedLink)}>
+                          <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Link
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Mail className="h-3.5 w-3.5 mr-1.5" /> Send via Email
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        The client will use this link to access the agency-branded version of the PGN app with their itinerary pre-loaded.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="px-6 py-3 font-medium">Client Name</th>
+                  <th className="px-6 py-3 font-medium">Email</th>
+                  <th className="px-6 py-3 font-medium">Trip Assigned</th>
+                  <th className="px-6 py-3 font-medium">Date Created</th>
+                  <th className="px-6 py-3 font-medium">App Access Link</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((client, i) => (
+                  <tr key={client.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
+                    <td className="px-6 py-4 text-sm font-medium">{client.name}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{client.email}</td>
+                    <td className="px-6 py-4 text-sm">{client.trip}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{client.date}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {client.link ? (
+                        <button onClick={() => handleCopy(client.link)} className="flex items-center gap-1 text-primary hover:underline text-xs">
+                          <Copy className="h-3 w-3" /> Copy
+                        </button>
+                      ) : "—"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant={client.status === "Active" ? "default" : "secondary"} className="text-xs">
+                        {client.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </PortalLayout>
+  );
+}
