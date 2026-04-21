@@ -711,6 +711,18 @@ export default function TripManagerPage() {
   // Create from template flow
   const [selectTemplateModal, setSelectTemplateModal] = useState(false);
 
+  // Auto-open create flow when navigated with ?new=1
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [autoOpenCreate, setAutoOpenCreate] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("new") === "1") {
+      setAutoOpenCreate(true);
+      navigate("/trip-manager", { replace: true });
+    }
+  }, [location.search, navigate]);
+
   const handleUseForClient = (template: Trip) => {
     setSelectedTemplate(template);
     setUseForClientModal(true);
@@ -744,6 +756,7 @@ export default function TripManagerPage() {
             onCreateClientFromScratch={() => { setEditorMode("client"); setView("editor"); }}
             onUseForClient={handleUseForClient}
             onCreateClientFromTemplate={handleCreateClientFromTemplate}
+            autoOpenCreate={autoOpenCreate}
           />
           <UseForClientModal
             open={useForClientModal}
