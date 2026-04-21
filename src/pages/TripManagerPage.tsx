@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
   Plus, Eye, Save, Edit, Trash2, Mail, MessageCircle, Globe, ArrowLeft,
-  Users, FileText, X, AlertCircle,
+  Users, FileText, X, AlertCircle, CalendarIcon, Send,
 } from "lucide-react";
+import { format } from "date-fns";
+import { useLocation, useNavigate } from "react-router-dom";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,11 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -184,7 +189,7 @@ function SelectTemplateModal({
 /* ───────── Trip List (Tabbed) ───────── */
 function TripList({
   onEditTemplate, onEditClient, onCreateTemplate, onCreateClientFromScratch,
-  onUseForClient, onCreateClientFromTemplate,
+  onUseForClient, onCreateClientFromTemplate, autoOpenCreate,
 }: {
   onEditTemplate: (id: number) => void;
   onEditClient: (id: number) => void;
@@ -192,10 +197,23 @@ function TripList({
   onCreateClientFromScratch: () => void;
   onUseForClient: (template: Trip) => void;
   onCreateClientFromTemplate: () => void;
+  autoOpenCreate?: boolean;
 }) {
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<string | null>(null);
+  const [whatsappTarget, setWhatsappTarget] = useState<string | null>(null);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState("");
+
+  // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setTab("client-trips");
+      setShowCreateModal(true);
+    }
+  }, [autoOpenCreate]);
 
   const handleCreate = () => {
     if (tab === "templates") {
@@ -298,7 +316,6 @@ function TripList({
                     <tr className="border-b text-left text-xs text-muted-foreground">
                       <th className="px-6 py-3 font-medium">Trip Name</th>
                       <th className="px-6 py-3 font-medium">Assigned Client</th>
-                      <th className="px-6 py-3 font-medium">Trip Type</th>
                       <th className="px-6 py-3 font-medium">Status</th>
                       <th className="px-6 py-3 font-medium">Last Updated</th>
                       <th className="px-6 py-3 font-medium text-right">Actions</th>
@@ -312,9 +329,6 @@ function TripList({
                           {trip.client === "Unassigned" ? <span className="italic text-muted-foreground/60">Unassigned</span> : trip.client}
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant="default" className="text-xs">Custom</Badge>
-                        </td>
-                        <td className="px-6 py-4">
                           <Badge variant={trip.status === "Active" ? "default" : "secondary"} className="text-xs">{trip.status}</Badge>
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
@@ -323,8 +337,8 @@ function TripList({
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View"><Eye className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => toast({ title: "Email sent" })}><Mail className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => toast({ title: "WhatsApp sent" })}><MessageCircle className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => setEmailTarget(trip.client)}><Mail className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => setWhatsappTarget(trip.client)}><MessageCircle className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
                           </div>
                         </td>
@@ -344,6 +358,68 @@ function TripList({
         onFromTemplate={onCreateClientFromTemplate}
         onFromScratch={onCreateClientFromScratch}
       />
+
+      {/* Send Email modal */}
+      <Dialog open={!!emailTarget} onOpenChange={(v) => !v && setEmailTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Email{emailTarget ? ` to ${emailTarget}` : ""}</DialogTitle>
+            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            <Label className="text-xs">Personalized message</Label>
+            <Textarea
+              rows={6}
+              value={emailMessage}
+              onChange={(e) => setEmailMessage(e.target.value)}
+              placeholder="Hi, here are the latest details for your trip…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailTarget(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                toast({ title: "Email sent", description: emailTarget ? `Sent to ${emailTarget}` : undefined });
+                setEmailMessage("");
+                setEmailTarget(null);
+              }}
+            >
+              <Send className="h-4 w-4 mr-2" /> Send
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send WhatsApp modal */}
+      <Dialog open={!!whatsappTarget} onOpenChange={(v) => !v && setWhatsappTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send WhatsApp{whatsappTarget ? ` to ${whatsappTarget}` : ""}</DialogTitle>
+            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            <Label className="text-xs">Personalized message</Label>
+            <Textarea
+              rows={6}
+              value={whatsappMessage}
+              onChange={(e) => setWhatsappMessage(e.target.value)}
+              placeholder="Hi, here are the latest details for your trip…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWhatsappTarget(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                toast({ title: "WhatsApp Sent", description: whatsappTarget ? `Sent to ${whatsappTarget}` : undefined });
+                setWhatsappMessage("");
+                setWhatsappTarget(null);
+              }}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp Sent
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
@@ -360,6 +436,7 @@ function TripEditor({
   const [stops, setStops] = useState<Stop[]>(editorMode === "customize" ? [...defaultStops] : []);
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [activeFrom, setActiveFrom] = useState<Date | undefined>();
 
   const showClientFields = editorMode === "client" || editorMode === "customize";
 
@@ -445,7 +522,7 @@ function TripEditor({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-xs">WhatsApp Number</Label>
+                    <Label className="text-xs">Phone Number</Label>
                     <Input placeholder="+32 470 123 456" />
                   </div>
                   <div className="space-y-2">
@@ -453,15 +530,50 @@ function TripEditor({
                     <Input placeholder="Belgium" />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Trip Status — separated section */}
+          {showClientFields && (
+            <Card className="border-none shadow-sm">
+              <CardContent className="p-5 space-y-4">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Trip Status</Label>
                 <div className="space-y-2">
                   <Label className="text-xs">Status</Label>
                   <Select defaultValue="active">
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="deactive">De-active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Active From:</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !activeFrom && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {activeFrom ? format(activeFrom, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={activeFrom}
+                        onSelect={setActiveFrom}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </CardContent>
             </Card>
@@ -599,6 +711,18 @@ export default function TripManagerPage() {
   // Create from template flow
   const [selectTemplateModal, setSelectTemplateModal] = useState(false);
 
+  // Auto-open create flow when navigated with ?new=1
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [autoOpenCreate, setAutoOpenCreate] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("new") === "1") {
+      setAutoOpenCreate(true);
+      navigate("/trip-manager", { replace: true });
+    }
+  }, [location.search, navigate]);
+
   const handleUseForClient = (template: Trip) => {
     setSelectedTemplate(template);
     setUseForClientModal(true);
@@ -632,6 +756,7 @@ export default function TripManagerPage() {
             onCreateClientFromScratch={() => { setEditorMode("client"); setView("editor"); }}
             onUseForClient={handleUseForClient}
             onCreateClientFromTemplate={handleCreateClientFromTemplate}
+            autoOpenCreate={autoOpenCreate}
           />
           <UseForClientModal
             open={useForClientModal}
