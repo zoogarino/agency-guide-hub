@@ -427,6 +427,7 @@ function TripEditor({
   const [stops, setStops] = useState<Stop[]>(editorMode === "customize" ? [...defaultStops] : []);
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [activeFrom, setActiveFrom] = useState<Date | undefined>();
 
   const showClientFields = editorMode === "client" || editorMode === "customize";
 
