@@ -207,6 +207,14 @@ function TripList({
   const [emailMessage, setEmailMessage] = useState("");
   const [whatsappMessage, setWhatsappMessage] = useState("");
 
+  // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setTab("client-trips");
+      setShowCreateModal(true);
+    }
+  }, [autoOpenCreate]);
+
   const handleCreate = () => {
     if (tab === "templates") {
       onCreateTemplate();
