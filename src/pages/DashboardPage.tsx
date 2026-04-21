@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, CreditCard } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +17,6 @@ const recentActivity = [
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [clientsExpanded, setClientsExpanded] = useState(false);
-
-  // Mock subscription renewal countdown
-  const renewsInDays = 23;
-  const subscriptionWarning = renewsInDays < 7;
 
   const stats = [
     {
@@ -44,14 +40,6 @@ export default function DashboardPage() {
       change: "1 under review",
       expandable: false,
     },
-    {
-      label: "Subscription Status",
-      value: `${renewsInDays}d`,
-      icon: CreditCard,
-      change: `Renews in ${renewsInDays} days`,
-      expandable: false,
-      warning: subscriptionWarning,
-    },
   ];
 
   return (
@@ -63,7 +51,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -72,9 +60,7 @@ export default function DashboardPage() {
               transition={{ delay: i * 0.1 }}
             >
               <Card
-                className={`border-none shadow-sm ${stat.expandable ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${
-                  stat.warning ? "ring-1 ring-warning/40" : ""
-                }`}
+                className={`border-none shadow-sm ${stat.expandable ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
                 onClick={stat.expandable ? () => setClientsExpanded((v) => !v) : undefined}
               >
                 <CardContent className="p-6">
@@ -82,12 +68,12 @@ export default function DashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{stat.label}</p>
                       <p className="text-3xl font-bold font-heading mt-1">{stat.value}</p>
-                      <p className={`text-xs mt-2 ${stat.warning ? "text-warning font-medium" : "text-primary"}`}>
+                      <p className="text-xs mt-2 text-primary">
                         {stat.change}
                       </p>
                     </div>
-                    <div className={`rounded-xl p-3 ${stat.warning ? "bg-warning/10" : "bg-primary/10"}`}>
-                      <stat.icon className={`h-5 w-5 ${stat.warning ? "text-warning" : "text-primary"}`} />
+                    <div className="rounded-xl p-3 bg-primary/10">
+                      <stat.icon className="h-5 w-5 text-primary" />
                     </div>
                   </div>
 
