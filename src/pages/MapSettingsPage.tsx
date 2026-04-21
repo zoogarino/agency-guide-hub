@@ -124,7 +124,7 @@ export default function MapSettingsPage() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl space-y-6">
         {/* Header */}
         <div>
-          <h1 className="font-heading text-2xl font-bold">Client Map Settings</h1>
+          <h1 className="font-heading text-2xl font-bold">Client Map Settings – Pin Visibility</h1>
           <p className="text-muted-foreground text-sm mt-1">
             These settings control what your clients see on their map. They apply to all clients created under your account.
           </p>
