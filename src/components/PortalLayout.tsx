@@ -12,6 +12,7 @@ import {
   Cog,
 } from "lucide-react";
 import pgnLogo from "@/assets/pgn-logo.png";
+import agencyLogo from "@/assets/agency-logo.png";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -65,6 +66,18 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             );
           })}
         </nav>
+
+        {/* Agency logo placeholder */}
+        <div className="px-4 pb-3 flex items-center justify-center">
+          <img
+            src={agencyLogo}
+            alt="Agency logo"
+            loading="lazy"
+            width={collapsed ? 36 : 96}
+            height={collapsed ? 36 : 96}
+            className={`object-contain transition-all ${collapsed ? "h-9 w-9" : "h-20 w-20"}`}
+          />
+        </div>
 
         {/* Footer */}
         <div className="border-t border-sidebar-border p-4">
