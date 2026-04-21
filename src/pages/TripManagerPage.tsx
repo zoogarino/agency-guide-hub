@@ -513,7 +513,7 @@ function TripEditor({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-xs">WhatsApp Number</Label>
+                    <Label className="text-xs">Phone Number</Label>
                     <Input placeholder="+32 470 123 456" />
                   </div>
                   <div className="space-y-2">
@@ -521,15 +521,50 @@ function TripEditor({
                     <Input placeholder="Belgium" />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Trip Status — separated section */}
+          {showClientFields && (
+            <Card className="border-none shadow-sm">
+              <CardContent className="p-5 space-y-4">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Trip Status</Label>
                 <div className="space-y-2">
                   <Label className="text-xs">Status</Label>
                   <Select defaultValue="active">
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="deactive">De-active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Active From:</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !activeFrom && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {activeFrom ? format(activeFrom, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={activeFrom}
+                        onSelect={setActiveFrom}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </CardContent>
             </Card>
