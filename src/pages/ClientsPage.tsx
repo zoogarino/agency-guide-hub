@@ -138,16 +138,9 @@ export default function ClientsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select defaultValue="active">
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Account status is determined automatically once an "Active From" date is set in the Trip Builder.
+                </p>
                 <Button onClick={handleCreate} className="w-full">Create Client</Button>
 
                 {generatedLink && (
@@ -210,9 +203,21 @@ export default function ClientsPage() {
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant={client.status === "Active" ? "default" : "secondary"} className="text-xs">
-                        {client.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`text-xs ${statusBadgeClass[client.status]}`}>
+                          {client.status}
+                        </Badge>
+                        {(client.status === "Pending" || client.status === "Unscheduled") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-primary hover:text-primary"
+                            onClick={() => toast({ title: "Premium access activated", description: `${client.name} now has premium access.` })}
+                          >
+                            <Zap className="h-3 w-3 mr-1" /> Activate Now
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
