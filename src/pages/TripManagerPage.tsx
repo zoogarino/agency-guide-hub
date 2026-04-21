@@ -201,6 +201,10 @@ function TripList({
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<string | null>(null);
+  const [whatsappTarget, setWhatsappTarget] = useState<string | null>(null);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   const handleCreate = () => {
     if (tab === "templates") {
