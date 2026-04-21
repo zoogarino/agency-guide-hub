@@ -99,8 +99,8 @@ export default function DashboardPage() {
                             <span className="text-sm font-semibold">24</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Active Clients</span>
-                            <span className="text-sm font-semibold">12</span>
+                            <span className="text-xs text-muted-foreground">Active Clients (premium)</span>
+                            <span className="text-sm font-semibold">8</span>
                           </div>
                         </div>
                       </motion.div>
