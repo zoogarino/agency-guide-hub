@@ -303,7 +303,6 @@ function TripList({
                     <tr className="border-b text-left text-xs text-muted-foreground">
                       <th className="px-6 py-3 font-medium">Trip Name</th>
                       <th className="px-6 py-3 font-medium">Assigned Client</th>
-                      <th className="px-6 py-3 font-medium">Trip Type</th>
                       <th className="px-6 py-3 font-medium">Status</th>
                       <th className="px-6 py-3 font-medium">Last Updated</th>
                       <th className="px-6 py-3 font-medium text-right">Actions</th>
@@ -317,9 +316,6 @@ function TripList({
                           {trip.client === "Unassigned" ? <span className="italic text-muted-foreground/60">Unassigned</span> : trip.client}
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant="default" className="text-xs">Custom</Badge>
-                        </td>
-                        <td className="px-6 py-4">
                           <Badge variant={trip.status === "Active" ? "default" : "secondary"} className="text-xs">{trip.status}</Badge>
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
@@ -328,8 +324,8 @@ function TripList({
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View"><Eye className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => toast({ title: "Email sent" })}><Mail className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => toast({ title: "WhatsApp sent" })}><MessageCircle className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => setEmailTarget(trip.client)}><Mail className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => setWhatsappTarget(trip.client)}><MessageCircle className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
                           </div>
                         </td>
