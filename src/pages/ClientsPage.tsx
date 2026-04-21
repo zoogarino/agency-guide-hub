@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink } from "lucide-react";
+import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -14,6 +18,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const mockClients = [
   { id: 1, name: "Sarah Miller", email: "sarah@example.com", trip: "Etosha Explorer", date: "2026-02-20", link: "app.pocketguide-namibia.com/share-trip/abc123", status: "Active" },
@@ -23,20 +29,33 @@ const mockClients = [
   { id: 5, name: "Tom Brown", email: "tom@example.com", trip: "—", date: "2026-02-08", link: "", status: "Inactive" },
 ];
 
-const trips = ["Etosha Explorer", "Skeleton Coast Adventure", "Sossusvlei Dunes", "Fish River Canyon", "Windhoek City Tour"];
-
 export default function ClientsPage() {
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dob, setDob] = useState<Date | undefined>();
+
+  // Open the New Client sheet automatically when navigated with ?new=1
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("new") === "1") {
+      setSheetOpen(true);
+      // clean the query param so refreshes don't re-open
+      navigate("/clients", { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const filtered = mockClients.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleGenerate = () => {
+  const handleCreate = () => {
     const id = Math.random().toString(36).substring(2, 10);
     setGeneratedLink(`app.pocketguide-namibia.com/share-trip/${id}`);
+    toast({ title: "Client created" });
   };
 
   const handleCopy = (link: string) => {
@@ -52,7 +71,7 @@ export default function ClientsPage() {
             <h1 className="font-heading text-2xl font-bold">Clients</h1>
             <p className="text-muted-foreground text-sm mt-1">Manage your client accounts and trip access</p>
           </div>
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" /> Create New Client</Button>
             </SheetTrigger>
@@ -61,22 +80,64 @@ export default function ClientsPage() {
                 <SheetTitle className="font-heading">New Client</SheetTitle>
               </SheetHeader>
               <div className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Select>
+                    <SelectTrigger><SelectValue placeholder="Select a title" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mr">Mr</SelectItem>
+                      <SelectItem value="mrs">Mrs</SelectItem>
+                      <SelectItem value="ms">Ms</SelectItem>
+                      <SelectItem value="dr">Dr</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2"><Label>First Name</Label><Input placeholder="Jane" /></div>
                   <div className="space-y-2"><Label>Last Name</Label><Input placeholder="Smith" /></div>
                 </div>
-                <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
-                <div className="space-y-2"><Label>WhatsApp Number</Label><Input placeholder="+32 470 123 456" /></div>
-                <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
+                <div className="space-y-2"><Label>Username</Label><Input placeholder="janesmith" /></div>
                 <div className="space-y-2">
-                  <Label>Assign Trip</Label>
+                  <Label>Date of Birth</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dob && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dob ? format(dob, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dob}
+                        onSelect={setDob}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
+                <div className="space-y-2"><Label>Phone Number</Label><Input placeholder="+32 470 123 456" /></div>
+                <div className="space-y-2">
+                  <Label>WhatsApp Usage</Label>
                   <Select>
-                    <SelectTrigger><SelectValue placeholder="Select a trip" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select an option" /></SelectTrigger>
                     <SelectContent>
-                      {trips.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select defaultValue="active">
@@ -87,7 +148,7 @@ export default function ClientsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleGenerate} className="w-full">Generate Access Link</Button>
+                <Button onClick={handleCreate} className="w-full">Create Client</Button>
 
                 {generatedLink && (
                   <Card className="border-none">

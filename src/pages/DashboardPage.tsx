@@ -1,13 +1,9 @@
-import { motion } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, CreditCard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-
-const stats = [
-  { label: "Total Clients", value: "24", icon: Users, change: "+3 this week", warning: false },
-  { label: "Active Trips", value: "12", icon: Map, change: "2 starting soon", warning: false },
-  { label: "Pending Pin Requests", value: "3", icon: MapPin, change: "1 under review", warning: false },
-];
 
 const recentActivity = [
   { text: "New client account created for Sarah Miller", time: "2 hours ago", type: "client" },
@@ -19,6 +15,45 @@ const recentActivity = [
 ];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const [clientsExpanded, setClientsExpanded] = useState(false);
+
+  // Mock subscription renewal countdown
+  const renewsInDays = 23;
+  const subscriptionWarning = renewsInDays < 7;
+
+  const stats = [
+    {
+      label: "Total Clients",
+      value: "24",
+      icon: Users,
+      change: "+3 this week",
+      expandable: true,
+    },
+    {
+      label: "Active Trips",
+      value: "12",
+      icon: Map,
+      change: "2 starting soon",
+      expandable: false,
+    },
+    {
+      label: "Pending Pin Requests",
+      value: "3",
+      icon: MapPin,
+      change: "1 under review",
+      expandable: false,
+    },
+    {
+      label: "Subscription Status",
+      value: `${renewsInDays}d`,
+      icon: CreditCard,
+      change: `Renews in ${renewsInDays} days`,
+      expandable: false,
+      warning: subscriptionWarning,
+    },
+  ];
+
   return (
     <PortalLayout>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
@@ -28,7 +63,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -36,20 +71,55 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="border-none shadow-sm">
+              <Card
+                className={`border-none shadow-sm ${stat.expandable ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${
+                  stat.warning ? "ring-1 ring-warning/40" : ""
+                }`}
+                onClick={stat.expandable ? () => setClientsExpanded((v) => !v) : undefined}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{stat.label}</p>
                       <p className="text-3xl font-bold font-heading mt-1">{stat.value}</p>
-                      <p className="text-xs mt-2 text-primary">
+                      <p className={`text-xs mt-2 ${stat.warning ? "text-warning font-medium" : "text-primary"}`}>
                         {stat.change}
                       </p>
                     </div>
-                    <div className="rounded-xl p-3 bg-primary/10">
-                      <stat.icon className="h-5 w-5 text-primary" />
+                    <div className={`rounded-xl p-3 ${stat.warning ? "bg-warning/10" : "bg-primary/10"}`}>
+                      <stat.icon className={`h-5 w-5 ${stat.warning ? "text-warning" : "text-primary"}`} />
                     </div>
                   </div>
+
+                  {stat.expandable && (
+                    <div className="mt-4 flex items-center justify-end text-xs text-muted-foreground">
+                      <span className="mr-1">{clientsExpanded ? "Hide breakdown" : "Show breakdown"}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${clientsExpanded ? "rotate-180" : ""}`} />
+                    </div>
+                  )}
+
+                  <AnimatePresence>
+                    {stat.expandable && clientsExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-3 pt-3 border-t border-border space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Total Clients</span>
+                            <span className="text-sm font-semibold">24</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Active Clients</span>
+                            <span className="text-sm font-semibold">12</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
             </motion.div>
@@ -58,7 +128,10 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="border-none shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+          <Card
+            onClick={() => navigate("/clients?new=1")}
+            className="border-none shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
+          >
             <CardContent className="p-5 flex items-center gap-4">
               <div className="rounded-lg bg-primary/10 p-2.5">
                 <Plus className="h-5 w-5 text-primary" />
@@ -70,7 +143,10 @@ export default function DashboardPage() {
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </CardContent>
           </Card>
-          <Card className="border-none shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+          <Card
+            onClick={() => navigate("/trip-manager?new=1")}
+            className="border-none shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
+          >
             <CardContent className="p-5 flex items-center gap-4">
               <div className="rounded-lg bg-primary/10 p-2.5">
                 <Map className="h-5 w-5 text-primary" />
