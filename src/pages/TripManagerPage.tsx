@@ -189,7 +189,7 @@ function SelectTemplateModal({
 /* ───────── Trip List (Tabbed) ───────── */
 function TripList({
   onEditTemplate, onEditClient, onCreateTemplate, onCreateClientFromScratch,
-  onUseForClient, onCreateClientFromTemplate,
+  onUseForClient, onCreateClientFromTemplate, autoOpenCreate,
 }: {
   onEditTemplate: (id: number) => void;
   onEditClient: (id: number) => void;
@@ -197,6 +197,7 @@ function TripList({
   onCreateClientFromScratch: () => void;
   onUseForClient: (template: Trip) => void;
   onCreateClientFromTemplate: () => void;
+  autoOpenCreate?: boolean;
 }) {
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("templates");
