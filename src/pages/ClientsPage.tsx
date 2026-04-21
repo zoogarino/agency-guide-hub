@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
+import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon, Zap } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,13 +21,32 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-const mockClients = [
+type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
+
+interface MockClient {
+  id: number;
+  name: string;
+  email: string;
+  trip: string;
+  date: string;
+  link: string;
+  status: ClientStatus;
+}
+
+const mockClients: MockClient[] = [
   { id: 1, name: "Sarah Miller", email: "sarah@example.com", trip: "Etosha Explorer", date: "2026-02-20", link: "app.pocketguide-namibia.com/share-trip/abc123", status: "Active" },
-  { id: 2, name: "John Doe", email: "john@example.com", trip: "Skeleton Coast Adventure", date: "2026-02-18", link: "app.pocketguide-namibia.com/share-trip/def456", status: "Active" },
-  { id: 3, name: "Hans Weber", email: "hans@example.com", trip: "Sossusvlei Dunes", date: "2026-02-15", link: "app.pocketguide-namibia.com/share-trip/ghi789", status: "Inactive" },
+  { id: 2, name: "John Doe", email: "john@example.com", trip: "Skeleton Coast Adventure", date: "2026-02-18", link: "app.pocketguide-namibia.com/share-trip/def456", status: "Pending" },
+  { id: 3, name: "Hans Weber", email: "hans@example.com", trip: "Sossusvlei Dunes", date: "2026-02-15", link: "app.pocketguide-namibia.com/share-trip/ghi789", status: "Expired" },
   { id: 4, name: "Marie Dupont", email: "marie@example.com", trip: "Fish River Canyon", date: "2026-02-10", link: "app.pocketguide-namibia.com/share-trip/jkl012", status: "Active" },
-  { id: 5, name: "Tom Brown", email: "tom@example.com", trip: "—", date: "2026-02-08", link: "", status: "Inactive" },
+  { id: 5, name: "Tom Brown", email: "tom@example.com", trip: "—", date: "2026-02-08", link: "", status: "Unscheduled" },
 ];
+
+const statusBadgeClass: Record<ClientStatus, string> = {
+  Pending: "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15",
+  Active: "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15",
+  Expired: "bg-muted text-muted-foreground border-border hover:bg-muted",
+  Unscheduled: "bg-muted text-muted-foreground border-border hover:bg-muted",
+};
 
 export default function ClientsPage() {
   const { toast } = useToast();
@@ -138,16 +157,9 @@ export default function ClientsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select defaultValue="active">
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Account status is determined automatically once an "Active From" date is set in the Trip Builder.
+                </p>
                 <Button onClick={handleCreate} className="w-full">Create Client</Button>
 
                 {generatedLink && (
@@ -210,9 +222,21 @@ export default function ClientsPage() {
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant={client.status === "Active" ? "default" : "secondary"} className="text-xs">
-                        {client.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`text-xs ${statusBadgeClass[client.status]}`}>
+                          {client.status}
+                        </Badge>
+                        {(client.status === "Pending" || client.status === "Unscheduled") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-primary hover:text-primary"
+                            onClick={() => toast({ title: "Premium access activated", description: `${client.name} now has premium access.` })}
+                          >
+                            <Zap className="h-3 w-3 mr-1" /> Activate Now
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
