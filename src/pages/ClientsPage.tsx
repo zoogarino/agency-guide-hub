@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon, Zap } from "lucide-react";
+import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -204,19 +204,14 @@ export default function ClientsPage() {
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`text-xs ${statusBadgeClass[client.status]}`}>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className={`text-xs w-fit ${statusBadgeClass[client.status]}`}>
                           {client.status}
                         </Badge>
-                        {(client.status === "Pending" || client.status === "Unscheduled") && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs text-primary hover:text-primary"
-                            onClick={() => toast({ title: "Premium access activated", description: `${client.name} now has premium access.` })}
-                          >
-                            <Zap className="h-3 w-3 mr-1" /> Activate Now
-                          </Button>
+                        {client.status === "Unscheduled" && (
+                          <p className="text-[11px] text-muted-foreground leading-tight max-w-[220px]">
+                            No trip assigned — go to Trip Builder to assign a trip and set an Active From date.
+                          </p>
                         )}
                       </div>
                     </td>
