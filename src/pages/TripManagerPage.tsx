@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Mail, MessageCircle, Globe, ArrowLeft,
-  Users, FileText, X, AlertCircle, CalendarIcon, Send,
+  Plus, Eye, Save, Edit, Trash2, Mail, Globe, ArrowLeft,
+  Users, FileText, AlertCircle, CalendarIcon, Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -203,9 +203,7 @@ function TripList({
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [emailTarget, setEmailTarget] = useState<string | null>(null);
-  const [whatsappTarget, setWhatsappTarget] = useState<string | null>(null);
   const [emailMessage, setEmailMessage] = useState("");
-  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
   useEffect(() => {
@@ -338,7 +336,6 @@ function TripList({
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => setEmailTarget(trip.client)}><Mail className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => setWhatsappTarget(trip.client)}><MessageCircle className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
                           </div>
                         </td>
@@ -390,36 +387,6 @@ function TripList({
         </DialogContent>
       </Dialog>
 
-      {/* Send WhatsApp modal */}
-      <Dialog open={!!whatsappTarget} onOpenChange={(v) => !v && setWhatsappTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send WhatsApp{whatsappTarget ? ` to ${whatsappTarget}` : ""}</DialogTitle>
-            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Personalized message</Label>
-            <Textarea
-              rows={6}
-              value={whatsappMessage}
-              onChange={(e) => setWhatsappMessage(e.target.value)}
-              placeholder="Hi, here are the latest details for your trip…"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWhatsappTarget(null)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                toast({ title: "WhatsApp Sent", description: whatsappTarget ? `Sent to ${whatsappTarget}` : undefined });
-                setWhatsappMessage("");
-                setWhatsappTarget(null);
-              }}
-            >
-              <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp Sent
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </motion.div>
   );
 }
