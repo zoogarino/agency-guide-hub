@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon, Zap } from "lucide-react";
+import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
