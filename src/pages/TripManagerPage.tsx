@@ -744,6 +744,11 @@ export default function TripManagerPage() {
     if (params.get("new") === "1") {
       setAutoOpenCreate(true);
       navigate("/trip-manager", { replace: true });
+    } else if (params.get("edit")) {
+      // Open client trip editor when navigated with ?edit=<tripId> from a Client Profile
+      setEditorMode("client");
+      setView("editor");
+      navigate("/trip-manager", { replace: true });
     }
   }, [location.search, navigate]);
 
