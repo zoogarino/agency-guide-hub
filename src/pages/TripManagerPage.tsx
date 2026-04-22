@@ -404,6 +404,29 @@ function TripEditor({
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
+  const [tripEndDate, setTripEndDate] = useState<Date | undefined>();
+  const [activeFromError, setActiveFromError] = useState<string | null>(null);
+
+  const validateActiveFrom = (date: Date | undefined) => {
+    if (!date) {
+      setActiveFromError(null);
+      return;
+    }
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    if (date < sixMonthsAgo) {
+      setActiveFromError(
+        "The trip start date cannot be more than 6 months in the past. Please update the Active From date to reflect the current travel plans."
+      );
+    } else {
+      setActiveFromError(null);
+    }
+  };
+
+  const handleActiveFromChange = (date: Date | undefined) => {
+    setActiveFrom(date);
+    validateActiveFrom(date);
+  };
 
   const showClientFields = editorMode === "client" || editorMode === "customize";
 
