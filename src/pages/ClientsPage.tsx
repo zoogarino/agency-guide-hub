@@ -21,32 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
-
-interface MockClient {
-  id: number;
-  name: string;
-  email: string;
-  trip: string;
-  date: string;
-  link: string;
-  status: ClientStatus;
-}
-
-const mockClients: MockClient[] = [
-  { id: 1, name: "Sarah Miller", email: "sarah@example.com", trip: "Etosha Explorer", date: "2026-02-20", link: "app.pocketguide-namibia.com/share-trip/abc123", status: "Active" },
-  { id: 2, name: "John Doe", email: "john@example.com", trip: "Skeleton Coast Adventure", date: "2026-02-18", link: "app.pocketguide-namibia.com/share-trip/def456", status: "Pending" },
-  { id: 3, name: "Hans Weber", email: "hans@example.com", trip: "Sossusvlei Dunes", date: "2026-02-15", link: "app.pocketguide-namibia.com/share-trip/ghi789", status: "Expired" },
-  { id: 4, name: "Marie Dupont", email: "marie@example.com", trip: "Fish River Canyon", date: "2026-02-10", link: "app.pocketguide-namibia.com/share-trip/jkl012", status: "Active" },
-  { id: 5, name: "Tom Brown", email: "tom@example.com", trip: "—", date: "2026-02-08", link: "", status: "Unscheduled" },
-];
-
-const statusBadgeClass: Record<ClientStatus, string> = {
-  Pending: "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15",
-  Active: "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15",
-  Expired: "bg-muted text-muted-foreground border-border hover:bg-muted",
-  Unscheduled: "bg-muted text-muted-foreground border-border hover:bg-muted",
-};
+import { mockClients, statusBadgeClass } from "@/data/mockClients";
 
 export default function ClientsPage() {
   const { toast } = useToast();
@@ -210,7 +185,14 @@ export default function ClientsPage() {
               <tbody>
                 {filtered.map((client, i) => (
                   <tr key={client.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
-                    <td className="px-6 py-4 text-sm font-medium">{client.name}</td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/clients/${client.id}`)}
+                        className="text-foreground hover:text-primary hover:underline transition-colors text-left"
+                      >
+                        {client.name}
+                      </button>
+                    </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{client.email}</td>
                     <td className="px-6 py-4 text-sm">{client.trip}</td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{client.date}</td>
