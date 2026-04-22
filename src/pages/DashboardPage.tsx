@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { differenceInDays, parseISO, format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { mockClients } from "@/data/mockClients";
 
 const recentActivity = [
   { text: "New client account created for Sarah Miller", time: "2 hours ago", type: "client" },
@@ -17,6 +19,15 @@ const recentActivity = [
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [clientsExpanded, setClientsExpanded] = useState(false);
+
+  const outdatedClients = useMemo(() => {
+    const today = new Date();
+    return mockClients.filter((c) => {
+      if (!c.activeFrom || c.tripCompleted) return false;
+      const days = differenceInDays(today, parseISO(c.activeFrom));
+      return days > 150; // > 5 months
+    });
+  }, []);
 
   const stats = [
     {
