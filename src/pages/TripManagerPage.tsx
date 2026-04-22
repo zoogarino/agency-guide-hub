@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Mail, MessageCircle, Globe, ArrowLeft,
-  Users, FileText, X, AlertCircle, CalendarIcon, Send,
+  Plus, Eye, Save, Edit, Trash2, Mail, Globe, ArrowLeft,
+  Users, FileText, AlertCircle, CalendarIcon, Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -203,9 +203,7 @@ function TripList({
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [emailTarget, setEmailTarget] = useState<string | null>(null);
-  const [whatsappTarget, setWhatsappTarget] = useState<string | null>(null);
   const [emailMessage, setEmailMessage] = useState("");
-  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
   useEffect(() => {
@@ -338,7 +336,6 @@ function TripList({
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => setEmailTarget(trip.client)}><Mail className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send WhatsApp" onClick={() => setWhatsappTarget(trip.client)}><MessageCircle className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
                           </div>
                         </td>
@@ -390,36 +387,6 @@ function TripList({
         </DialogContent>
       </Dialog>
 
-      {/* Send WhatsApp modal */}
-      <Dialog open={!!whatsappTarget} onOpenChange={(v) => !v && setWhatsappTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send WhatsApp{whatsappTarget ? ` to ${whatsappTarget}` : ""}</DialogTitle>
-            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Personalized message</Label>
-            <Textarea
-              rows={6}
-              value={whatsappMessage}
-              onChange={(e) => setWhatsappMessage(e.target.value)}
-              placeholder="Hi, here are the latest details for your trip…"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWhatsappTarget(null)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                toast({ title: "WhatsApp Sent", description: whatsappTarget ? `Sent to ${whatsappTarget}` : undefined });
-                setWhatsappMessage("");
-                setWhatsappTarget(null);
-              }}
-            >
-              <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp Sent
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </motion.div>
   );
 }
@@ -437,6 +404,29 @@ function TripEditor({
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
+  const [tripEndDate, setTripEndDate] = useState<Date | undefined>();
+  const [activeFromError, setActiveFromError] = useState<string | null>(null);
+
+  const validateActiveFrom = (date: Date | undefined) => {
+    if (!date) {
+      setActiveFromError(null);
+      return;
+    }
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    if (date < sixMonthsAgo) {
+      setActiveFromError(
+        "The trip start date cannot be more than 6 months in the past. Please update the Active From date to reflect the current travel plans."
+      );
+    } else {
+      setActiveFromError(null);
+    }
+  };
+
+  const handleActiveFromChange = (date: Date | undefined) => {
+    setActiveFrom(date);
+    validateActiveFrom(date);
+  };
 
   const showClientFields = editorMode === "client" || editorMode === "customize";
 
@@ -568,12 +558,46 @@ function TripEditor({
                       <Calendar
                         mode="single"
                         selected={activeFrom}
-                        onSelect={setActiveFrom}
+                        onSelect={handleActiveFromChange}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
+                  {activeFromError && (
+                    <p className="text-xs text-destructive flex items-start gap-1.5 leading-tight">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>{activeFromError}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Trip End Date:</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !tripEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {tripEndDate ? format(tripEndDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={tripEndDate}
+                        onSelect={setTripEndDate}
+                        disabled={(date) => activeFrom ? date < activeFrom : false}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-[11px] text-muted-foreground">Required for the premium expiry calculation.</p>
                 </div>
               </CardContent>
             </Card>
@@ -719,6 +743,11 @@ export default function TripManagerPage() {
     const params = new URLSearchParams(location.search);
     if (params.get("new") === "1") {
       setAutoOpenCreate(true);
+      navigate("/trip-manager", { replace: true });
+    } else if (params.get("edit")) {
+      // Open client trip editor when navigated with ?edit=<tripId> from a Client Profile
+      setEditorMode("client");
+      setView("editor");
       navigate("/trip-manager", { replace: true });
     }
   }, [location.search, navigate]);

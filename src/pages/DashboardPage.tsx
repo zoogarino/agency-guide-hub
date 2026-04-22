@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { differenceInDays, parseISO, format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { mockClients } from "@/data/mockClients";
 
 const recentActivity = [
   { text: "New client account created for Sarah Miller", time: "2 hours ago", type: "client" },
@@ -17,6 +19,15 @@ const recentActivity = [
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [clientsExpanded, setClientsExpanded] = useState(false);
+
+  const outdatedClients = useMemo(() => {
+    const today = new Date();
+    return mockClients.filter((c) => {
+      if (!c.activeFrom || c.tripCompleted) return false;
+      const days = differenceInDays(today, parseISO(c.activeFrom));
+      return days > 150; // > 5 months
+    });
+  }, []);
 
   const stats = [
     {
@@ -145,6 +156,41 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Attention Required */}
+        {outdatedClients.length > 0 && (
+          <div>
+            <h2 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              Attention Required
+            </h2>
+            <Card className="border-warning/30 bg-warning/5 shadow-sm">
+              <CardContent className="p-6 space-y-4">
+                <p className="text-sm">
+                  The following clients have trip start dates that may be outdated. Please review and update their Active From date to avoid automatic premium expiry.
+                </p>
+                <ul className="divide-y divide-warning/20 rounded-md border border-warning/20 bg-background">
+                  {outdatedClients.map((c) => (
+                    <li key={c.id} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Active From: {c.activeFrom ? format(parseISO(c.activeFrom), "PP") : "—"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/clients/${c.id}`)}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Review Client →
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Recent Activity */}
         <div>
