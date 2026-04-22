@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-import { mockClients, statusBadgeClass } from "@/data/mockClients";
+import { mockClients, statusBadgeClass, resolveClientStatus } from "@/data/mockClients";
 
 export default function ClientsPage() {
   const { toast } = useToast();
@@ -121,16 +121,6 @@ export default function ClientsPage() {
                 </div>
                 <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
                 <div className="space-y-2"><Label>Phone Number</Label><Input placeholder="+32 470 123 456" /></div>
-                <div className="space-y-2">
-                  <Label>WhatsApp Usage</Label>
-                  <Select>
-                    <SelectTrigger><SelectValue placeholder="Select an option" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
                 <p className="text-xs text-muted-foreground">
                   Account status is determined automatically once an "Active From" date is set in the Trip Builder.
@@ -204,16 +194,21 @@ export default function ClientsPage() {
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="outline" className={`text-xs w-fit ${statusBadgeClass[client.status]}`}>
-                          {client.status}
-                        </Badge>
-                        {client.status === "Unscheduled" && (
-                          <p className="text-[11px] text-muted-foreground leading-tight max-w-[220px]">
-                            No trip assigned — go to Trip Builder to assign a trip and set an Active From date.
-                          </p>
-                        )}
-                      </div>
+                      {(() => {
+                        const status = resolveClientStatus(client);
+                        return (
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className={`text-xs w-fit ${statusBadgeClass[status]}`}>
+                              {status}
+                            </Badge>
+                            {status === "Unscheduled" && (
+                              <p className="text-[11px] text-muted-foreground leading-tight max-w-[220px]">
+                                No trip assigned — go to Trip Builder to assign a trip and set an Active From date.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
