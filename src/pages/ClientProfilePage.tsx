@@ -124,9 +124,14 @@ export default function ClientProfilePage() {
               <MessageSquare className="h-4 w-4 mr-1.5" /> Send Message
             </Button>
             {canActivate && (
-              <Button size="sm" onClick={() => toast({ title: "Premium access activated", description: `${client.name} now has premium access.` })}>
-                <Zap className="h-4 w-4 mr-1.5" /> Activate Now
-              </Button>
+              <div className="flex flex-col gap-1">
+                <Button variant="outline" size="sm" onClick={() => toast({ title: "Premium access activated", description: `${client.name} now has premium access.` })}>
+                  <Zap className="h-4 w-4 mr-1.5" /> Activate Early
+                </Button>
+                <p className="text-[11px] text-muted-foreground leading-tight max-w-[260px]">
+                  Use only if the automated activation date needs to be bypassed. This will immediately grant this client premium access.
+                </p>
+              </div>
             )}
             {client.tripId && (
               <Button variant="outline" size="sm" onClick={() => navigate("/trip-manager")}>
