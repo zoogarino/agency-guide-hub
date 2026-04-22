@@ -1,40 +1,18 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Hotel, Eye, Sparkles, Download } from "lucide-react";
+import { Hotel, Eye, Info } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 type AccommodationMode = "show_all" | "custom";
-
-const accommodationDatabase = [
-  "Namib Desert Lodge", "Okaukuejo Camp", "Sossusvlei Lodge", "Etosha Safari Camp",
-  "Swakopmund Hotel", "Kalahari Red Dunes Lodge", "Skeleton Coast Camp",
-  "Damaraland Camp", "Omaanda Lodge", "Zannier Hotels Sonop",
-];
-
-// Mock trip-imported accommodations
-const tripAccommodations = ["Okaukuejo Camp", "Etosha Safari Camp", "Swakopmund Hotel"];
 
 const DEFAULT_MODE: AccommodationMode = "custom";
 
 export default function MapSettingsPage() {
   const { toast } = useToast();
   const [mode, setMode] = useState<AccommodationMode>(DEFAULT_MODE);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-
-  const filtered = accommodationDatabase.filter(
-    (p) => p.toLowerCase().includes(search.toLowerCase()) && !selected.includes(p)
-  );
-
-  const handleImportFromTrip = () => {
-    const merged = Array.from(new Set([...selected, ...tripAccommodations]));
-    setSelected(merged);
-    toast({ title: "Imported from trip", description: `${tripAccommodations.length} accommodations added.` });
-  };
 
   const handleSave = () => {
     toast({ title: "Settings saved", description: "Client map settings have been updated." });
@@ -42,8 +20,6 @@ export default function MapSettingsPage() {
 
   const handleReset = () => {
     setMode(DEFAULT_MODE);
-    setSelected([]);
-    setSearch("");
     toast({ title: "Settings reset to default" });
   };
 
@@ -110,7 +86,7 @@ export default function MapSettingsPage() {
               })}
             </div>
 
-            {/* Custom selection interface */}
+            {/* Custom selection explanation */}
             <AnimatePresence>
               {mode === "custom" && (
                 <motion.div
@@ -120,77 +96,13 @@ export default function MapSettingsPage() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="space-y-4 pt-2">
-                    {/* Import banner */}
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                        <p className="text-sm text-foreground">
-                          <span className="font-medium">Import from trip</span>
-                          <span className="text-muted-foreground"> — automatically populate based on your client's assigned itinerary</span>
-                        </p>
-                      </div>
-                      <Button size="sm" onClick={handleImportFromTrip} className="shrink-0">
-                        <Download className="h-3.5 w-3.5 mr-1.5" /> Import from Trip
-                      </Button>
+                  <div className="pt-2">
+                    <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <p className="text-sm text-foreground leading-relaxed">
+                        When Custom Selection is active, each client will automatically see only the accommodation pins that are included as stops in their assigned trip. No manual configuration is needed — the map updates automatically based on each client's itinerary. Clients without an assigned trip will see no accommodation pins until a trip is assigned to their account.
+                      </p>
                     </div>
-
-                    {/* Search */}
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search accommodation..."
-                        className="pl-9"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                      />
-                    </div>
-                    {search && (
-                      <div className="max-h-40 overflow-y-auto space-y-1 rounded-lg border p-2">
-                        {filtered.map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => {
-                              setSelected([...selected, p]);
-                              setSearch("");
-                            }}
-                            className="flex items-center gap-2 w-full rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
-                          >
-                            <Hotel className="h-3.5 w-3.5 text-primary" />
-                            {p}
-                          </button>
-                        ))}
-                        {filtered.length === 0 && (
-                          <p className="text-xs text-muted-foreground px-3 py-2">No results</p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Selected tags */}
-                    {selected.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {selected.map((pin) => (
-                          <div
-                            key={pin}
-                            className="flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 text-sm"
-                          >
-                            <Hotel className="h-3.5 w-3.5 text-primary" />
-                            <span>{pin}</span>
-                            <button
-                              onClick={() => setSelected(selected.filter((p) => p !== pin))}
-                              className="text-muted-foreground hover:text-destructive"
-                              aria-label={`Remove ${pin}`}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <p className="text-xs text-muted-foreground">
-                      Only the pins listed here will be visible to your clients on their map.
-                    </p>
                   </div>
                 </motion.div>
               )}
