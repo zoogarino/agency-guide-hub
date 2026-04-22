@@ -558,12 +558,46 @@ function TripEditor({
                       <Calendar
                         mode="single"
                         selected={activeFrom}
-                        onSelect={setActiveFrom}
+                        onSelect={handleActiveFromChange}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
+                  {activeFromError && (
+                    <p className="text-xs text-destructive flex items-start gap-1.5 leading-tight">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>{activeFromError}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Trip End Date:</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !tripEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {tripEndDate ? format(tripEndDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={tripEndDate}
+                        onSelect={setTripEndDate}
+                        disabled={(date) => activeFrom ? date < activeFrom : false}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-[11px] text-muted-foreground">Required for the premium expiry calculation.</p>
                 </div>
               </CardContent>
             </Card>
