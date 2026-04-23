@@ -187,11 +187,33 @@ export default function ClientsPage() {
                     <td className="px-6 py-4 text-sm">{client.trip}</td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{client.date}</td>
                     <td className="px-6 py-4 text-sm">
-                      {client.link ? (
-                        <button onClick={() => handleCopy(client.link)} className="flex items-center gap-1 text-primary hover:underline text-xs">
-                          <Copy className="h-3 w-3" /> Copy
-                        </button>
-                      ) : "—"}
+                      {(() => {
+                        const al = client.accessLink;
+                        if (!al) {
+                          return <span className="text-xs text-muted-foreground">Not generated</span>;
+                        }
+                        if (al.activated) {
+                          return (
+                            <Badge variant="outline" className="text-xs bg-primary/15 text-primary border-primary/30 hover:bg-primary/15">
+                              Active
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs bg-warning/15 text-warning border-warning/30 hover:bg-warning/15">
+                              Awaiting activation
+                            </Badge>
+                            <button
+                              onClick={() => handleCopy(al.url.replace(/^https?:\/\//, ""))}
+                              className="flex items-center gap-1 text-primary hover:underline text-xs"
+                              title="Copy link"
+                            >
+                              <Copy className="h-3 w-3" /> Copy
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4">
                       {(() => {
