@@ -488,6 +488,14 @@ function TripEditor({
                     <Input placeholder="Belgium" />
                   </div>
                 </div>
+
+                <div className="pt-4 border-t border-border">
+                  <TravelPartySection
+                    members={travelParty}
+                    onChange={setTravelParty}
+                    showHelperNote
+                  />
+                </div>
               </CardContent>
             </Card>
           )}
