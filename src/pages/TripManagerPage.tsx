@@ -352,37 +352,6 @@ function TripList({
         onFromScratch={onCreateClientFromScratch}
       />
 
-      {/* Send Email modal */}
-      <Dialog open={!!emailTarget} onOpenChange={(v) => !v && setEmailTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Email{emailTarget ? ` to ${emailTarget}` : ""}</DialogTitle>
-            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Personalized message</Label>
-            <Textarea
-              rows={6}
-              value={emailMessage}
-              onChange={(e) => setEmailMessage(e.target.value)}
-              placeholder="Hi, here are the latest details for your trip…"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEmailTarget(null)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                toast({ title: "Email sent", description: emailTarget ? `Sent to ${emailTarget}` : undefined });
-                setEmailMessage("");
-                setEmailTarget(null);
-              }}
-            >
-              <Send className="h-4 w-4 mr-2" /> Send
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
     </motion.div>
   );
 }
