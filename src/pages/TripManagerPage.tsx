@@ -199,11 +199,8 @@ function TripList({
   onCreateClientFromTemplate: () => void;
   autoOpenCreate?: boolean;
 }) {
-  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [emailTarget, setEmailTarget] = useState<string | null>(null);
-  const [emailMessage, setEmailMessage] = useState("");
 
   // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
   useEffect(() => {
