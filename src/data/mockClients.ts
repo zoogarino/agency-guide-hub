@@ -2,10 +2,17 @@ import { addDays, addMonths, differenceInDays, isAfter } from "date-fns";
 
 export type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
 
+export interface AccessLink {
+  url: string;
+  generatedAt: string; // ISO datetime
+  activated: boolean;
+}
+
 export interface TravelPartyMember {
   id: string;
   name: string;
   email: string;
+  link?: AccessLink;
 }
 
 export interface MockClient {
