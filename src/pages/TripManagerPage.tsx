@@ -373,6 +373,7 @@ function TripEditor({
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
   const [tripEndDate, setTripEndDate] = useState<Date | undefined>();
   const [activeFromError, setActiveFromError] = useState<string | null>(null);
+  const [travelParty, setTravelParty] = useState<TravelPartyMember[]>([]);
 
   const validateActiveFrom = (date: Date | undefined) => {
     if (!date) {
