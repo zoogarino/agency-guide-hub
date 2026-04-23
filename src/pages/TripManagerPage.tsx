@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Mail, Globe, ArrowLeft,
-  Users, FileText, AlertCircle, CalendarIcon, Send,
+  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft,
+  Users, FileText, AlertCircle, CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation, useNavigate } from "react-router-dom";
