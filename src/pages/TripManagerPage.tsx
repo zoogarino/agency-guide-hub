@@ -24,6 +24,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import TravelPartySection from "@/components/TravelPartySection";
+import type { TravelPartyMember } from "@/data/mockClients";
 
 const categoryIcons: Record<string, React.ElementType> = {
   Activities: Coffee, Accommodation: Tent, Sites: MapPin,
