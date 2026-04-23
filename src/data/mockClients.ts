@@ -2,10 +2,17 @@ import { addDays, addMonths, differenceInDays, isAfter } from "date-fns";
 
 export type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
 
+export interface AccessLink {
+  url: string;
+  generatedAt: string; // ISO datetime
+  activated: boolean;
+}
+
 export interface TravelPartyMember {
   id: string;
   name: string;
   email: string;
+  link?: AccessLink;
 }
 
 export interface MockClient {
@@ -20,7 +27,8 @@ export interface MockClient {
   trip: string;
   tripId?: string;
   date: string;
-  link: string;
+  link: string; // legacy plain URL fallback
+  accessLink?: AccessLink;
   activeFrom?: string;
   tripEndDate?: string;
   durationMonths?: 3 | 6 | 12;
@@ -69,14 +77,31 @@ export const mockClients: MockClient[] = [
     email: "sarah@example.com", phone: "+44 7700 900123", country: "United Kingdom",
     trip: "Etosha Explorer", tripId: "trip-etosha", date: "2026-02-20",
     link: "app.pocketguide-namibia.com/share-trip/abc123",
+    accessLink: {
+      url: "https://app.pocketguide-namibia.com/share-trip/abc123",
+      generatedAt: "2026-04-15T14:32:00Z",
+      activated: true,
+    },
     activeFrom: "2026-04-25", tripEndDate: "2026-05-07", durationMonths: 6,
-    travelParty: [{ id: "tp1", name: "James Miller", email: "james@example.com" }],
+    travelParty: [{
+      id: "tp1", name: "James Miller", email: "james@example.com",
+      link: {
+        url: "https://app.pocketguide-namibia.com/share-trip/abc123-tp1",
+        generatedAt: "2026-04-15T14:35:00Z",
+        activated: false,
+      },
+    }],
   },
   {
     id: 2, name: "John Doe", title: "Mr", username: "johnd", dob: "1979-11-03",
     email: "john@example.com", phone: "+1 415 555 0143", country: "United States",
     trip: "Skeleton Coast Adventure", tripId: "trip-skeleton", date: "2026-02-18",
     link: "app.pocketguide-namibia.com/share-trip/def456",
+    accessLink: {
+      url: "https://app.pocketguide-namibia.com/share-trip/def456",
+      generatedAt: "2026-04-10T09:15:00Z",
+      activated: false,
+    },
     activeFrom: "2026-05-10", tripEndDate: "2026-05-25", durationMonths: 3,
   },
   {
@@ -84,6 +109,11 @@ export const mockClients: MockClient[] = [
     email: "hans@example.com", phone: "+49 30 1234 5678", country: "Germany",
     trip: "Sossusvlei Dunes", tripId: "trip-sossus", date: "2025-07-15",
     link: "app.pocketguide-namibia.com/share-trip/ghi789",
+    accessLink: {
+      url: "https://app.pocketguide-namibia.com/share-trip/ghi789",
+      generatedAt: "2025-07-20T11:00:00Z",
+      activated: true,
+    },
     activeFrom: "2025-08-01", tripEndDate: "2025-08-14", durationMonths: 6,
   },
   {

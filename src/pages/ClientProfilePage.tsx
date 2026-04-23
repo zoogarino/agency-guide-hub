@@ -1,23 +1,22 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Mail, Map as MapIcon, Copy, Link as LinkIcon, Plus, X, Send } from "lucide-react";
+import { ArrowLeft, Edit, Map as MapIcon, Copy, Link as LinkIcon, Lock, AlertTriangle } from "lucide-react";
 import { format, addDays, addMonths, parseISO } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
-  mockClients, statusBadgeClass, resolveClientStatus, type TravelPartyMember,
+  mockClients, statusBadgeClass, resolveClientStatus,
+  type TravelPartyMember, type AccessLink,
 } from "@/data/mockClients";
+import TravelPartySection from "@/components/TravelPartySection";
 
 interface ActivityEvent {
   date: string;
@@ -31,13 +30,11 @@ export default function ClientProfilePage() {
   const { toast } = useToast();
   const client = mockClients.find((c) => String(c.id) === id);
 
-  const [accessLink, setAccessLink] = useState(client?.link || "");
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [emailMessage, setEmailMessage] = useState("");
+  const [accessLink, setAccessLink] = useState<AccessLink | undefined>(client?.accessLink);
   const [travelParty, setTravelParty] = useState<TravelPartyMember[]>(client?.travelParty || []);
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [newMemberName, setNewMemberName] = useState("");
-  const [newMemberEmail, setNewMemberEmail] = useState("");
+
+  // Email lock-edit confirmation flow (acknowledgment only — read-only display in this view)
+  const [confirmEmailEditOpen, setConfirmEmailEditOpen] = useState(false);
 
   const status = useMemo(() => client ? resolveClientStatus(client) : "Unscheduled", [client]);
 
@@ -82,40 +79,28 @@ export default function ClientProfilePage() {
   const activity: ActivityEvent[] = [
     { date: client.date, description: "Account created", agent: "Jane Smith" },
     ...(client.trip !== "—" ? [{ date: client.date, description: `Trip assigned: ${client.trip}`, agent: "Jane Smith" }] : []),
+    ...(accessLink ? [{ date: format(parseISO(accessLink.generatedAt), "yyyy-MM-dd"), description: "Access link generated", agent: "Jane Smith" }] : []),
+    ...(accessLink?.activated ? [{ date: format(today, "yyyy-MM-dd"), description: "Client activated their account", agent: "System" }] : []),
     ...(status === "Active" ? [{ date: format(today, "yyyy-MM-dd"), description: "Premium access activated", agent: "System" }] : []),
-    { date: client.date, description: "Welcome email sent", agent: "Jane Smith" },
   ];
 
   const handleGenerateLink = () => {
-    const id = Math.random().toString(36).substring(2, 10);
-    const link = `app.pocketguide-namibia.com/share-trip/${id}`;
-    setAccessLink(link);
+    const slug = Math.random().toString(36).substring(2, 10);
+    setAccessLink({
+      url: `https://app.pocketguide-namibia.com/share-trip/${slug}`,
+      generatedAt: new Date().toISOString(),
+      activated: false,
+    });
     toast({ title: "Access link generated" });
   };
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(`https://${text}`);
+    navigator.clipboard.writeText(text);
     toast({ title: "Link copied to clipboard" });
   };
 
-  const handleAddMember = () => {
-    if (!newMemberName.trim() || !newMemberEmail.trim()) return;
-    setTravelParty([
-      ...travelParty,
-      { id: Math.random().toString(36).slice(2, 9), name: newMemberName.trim(), email: newMemberEmail.trim() },
-    ]);
-    setNewMemberName("");
-    setNewMemberEmail("");
-    setAddMemberOpen(false);
-    toast({ title: "Travel party member added" });
-  };
-
-  const handleRemoveMember = (id: string) => {
-    setTravelParty(travelParty.filter((m) => m.id !== id));
-  };
-
   const canActivate = status === "Pending" || status === "Unscheduled";
-  const partyFull = travelParty.length >= 2;
+  const emailLocked = accessLink?.activated;
 
   return (
     <PortalLayout>
@@ -152,24 +137,10 @@ export default function ClientProfilePage() {
         {/* Quick Actions */}
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 flex flex-wrap gap-2 items-start">
-            <Button variant="outline" size="sm" onClick={() => setEmailOpen(true)}>
-              <Mail className="h-4 w-4 mr-1.5" /> Send Email
-            </Button>
             {client.tripId && (
               <Button variant="outline" size="sm" onClick={() => navigate(`/trip-manager?edit=${client.tripId}`)}>
                 <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
               </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={handleGenerateLink}>
-              <LinkIcon className="h-4 w-4 mr-1.5" /> Generate Access Link
-            </Button>
-            {accessLink && (
-              <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-xs font-mono">
-                <span className="truncate max-w-[260px]">{accessLink}</span>
-                <button onClick={() => handleCopy(accessLink)} className="text-primary hover:text-primary/80">
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
             )}
             {canActivate && (
               <div className="flex flex-col gap-1 ml-auto">
@@ -188,6 +159,55 @@ export default function ClientProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Client App Access Link — primary deliverable */}
+        <Card className="border-2 border-primary/20 shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="font-heading text-lg font-semibold">Client App Access Link</h2>
+              {accessLink && (
+                <Badge
+                  variant="outline"
+                  className={
+                    accessLink.activated
+                      ? "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15"
+                      : "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15"
+                  }
+                >
+                  {accessLink.activated ? "Account activated" : "Awaiting activation"}
+                </Badge>
+              )}
+            </div>
+
+            {!accessLink ? (
+              <div className="flex flex-col items-center gap-3 py-6 text-center">
+                <Button size="lg" onClick={handleGenerateLink}>
+                  <LinkIcon className="h-4 w-4 mr-2" /> Generate Access Link
+                </Button>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Generate a unique access link to share with your client. They will use this to access their premium PGN experience.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex-1 min-w-[260px] rounded-md bg-muted px-4 py-3 text-sm font-mono break-all">
+                    {accessLink.url}
+                  </div>
+                  <Button size="lg" onClick={() => handleCopy(accessLink.url)}>
+                    <Copy className="h-4 w-4 mr-2" /> Copy Link
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Generated on {format(parseISO(accessLink.generatedAt), "MMM d, yyyy 'at' HH:mm")}
+                </p>
+                <p className="text-[11px] text-muted-foreground italic">
+                  Each link can only be used to create one account. Editing the client's email will invalidate this link.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Client Details */}
           <Card className="border-none shadow-sm">
@@ -198,7 +218,35 @@ export default function ClientProfilePage() {
                 <Detail label="Username" value={client.username} />
                 <Detail label="Date of Birth" value={client.dob} />
                 <Detail label="Country" value={client.country} />
-                <Detail label="Email" value={client.email} />
+                <div>
+                  <dt className="text-xs text-muted-foreground flex items-center gap-1">
+                    Email
+                    {emailLocked && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            This email address is locked because the client has already activated their account. Contact PGN Super Admin if a change is required.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </dt>
+                  <dd className="font-medium flex items-center gap-2">
+                    {client.email}
+                    {accessLink && !accessLink.activated && (
+                      <button
+                        onClick={() => setConfirmEmailEditOpen(true)}
+                        className="text-[11px] text-primary hover:underline"
+                        title="Edit email"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </dd>
+                </div>
                 <Detail label="Phone Number" value={client.phone} />
                 <Detail label="Account Created" value={client.date} />
               </dl>
@@ -250,51 +298,8 @@ export default function ClientProfilePage() {
 
         {/* Travel Party */}
         <Card className="border-none shadow-sm">
-          <CardContent className="p-6 space-y-4">
-            <div>
-              <h2 className="font-heading text-lg font-semibold">Travel Party</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Add up to 2 additional members to share this client's premium app access. Travel party members are sub-accounts linked to this client and do not count toward your agency's client limit.
-              </p>
-            </div>
-
-            {travelParty.length > 0 ? (
-              <ul className="divide-y divide-border rounded-md border border-border">
-                {travelParty.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">{m.name}</p>
-                      <p className="text-xs text-muted-foreground">{m.email}</p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleRemoveMember(m.id)}>
-                      <X className="h-4 w-4 mr-1" /> Remove
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-muted-foreground italic">No travel party members yet.</p>
-            )}
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-block">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={partyFull}
-                      onClick={() => setAddMemberOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1.5" /> Add Member
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                {partyFull && (
-                  <TooltipContent>Maximum of 2 additional travel party members reached.</TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+          <CardContent className="p-6">
+            <TravelPartySection members={travelParty} onChange={setTravelParty} />
           </CardContent>
         </Card>
 
@@ -317,59 +322,24 @@ export default function ClientProfilePage() {
         </Card>
       </motion.div>
 
-      {/* Send Email modal */}
-      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
+      {/* Confirm-invalidate-on-email-edit modal (primary client) */}
+      <Dialog open={confirmEmailEditOpen} onOpenChange={setConfirmEmailEditOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Email to {client.name}</DialogTitle>
-            <DialogDescription>Add a personalized message below.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" /> Invalidate access link?
+            </DialogTitle>
+            <DialogDescription>
+              Editing this email address will invalidate the existing access link. A new link will need to be generated. The previously generated link will no longer work. Do you want to continue?
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Personalized message</Label>
-            <Textarea
-              rows={6}
-              value={emailMessage}
-              onChange={(e) => setEmailMessage(e.target.value)}
-              placeholder={`Hi ${client.name.split(" ")[0]}, …`}
-            />
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEmailOpen(false)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                toast({ title: "Email sent", description: `Sent to ${client.email}` });
-                setEmailMessage("");
-                setEmailOpen(false);
-              }}
-            >
-              <Send className="h-4 w-4 mr-2" /> Send
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Travel Party Member modal */}
-      <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Travel Party Member</DialogTitle>
-            <DialogDescription>This person will share the same trip and premium access window.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            <div className="space-y-2">
-              <Label className="text-xs">Name</Label>
-              <Input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Full name" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Email</Label>
-              <Input type="email" value={newMemberEmail} onChange={(e) => setNewMemberEmail(e.target.value)} placeholder="email@example.com" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddMemberOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddMember} disabled={!newMemberName.trim() || !newMemberEmail.trim()}>
-              Add Member
-            </Button>
+            <Button variant="outline" onClick={() => setConfirmEmailEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              setAccessLink(undefined);
+              setConfirmEmailEditOpen(false);
+              navigate(`/clients?edit=${client.id}`);
+            }}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

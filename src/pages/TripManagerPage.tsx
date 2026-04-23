@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Mail, Globe, ArrowLeft,
-  Users, FileText, AlertCircle, CalendarIcon, Send,
+  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft,
+  Users, FileText, AlertCircle, CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,9 +21,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import TravelPartySection from "@/components/TravelPartySection";
+import type { TravelPartyMember } from "@/data/mockClients";
 
 const categoryIcons: Record<string, React.ElementType> = {
   Activities: Coffee, Accommodation: Tent, Sites: MapPin,
@@ -199,11 +201,8 @@ function TripList({
   onCreateClientFromTemplate: () => void;
   autoOpenCreate?: boolean;
 }) {
-  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [emailTarget, setEmailTarget] = useState<string | null>(null);
-  const [emailMessage, setEmailMessage] = useState("");
 
   // Auto-open the Create Client Trip modal when navigated with ?new=1 from the dashboard
   useEffect(() => {
@@ -335,7 +334,6 @@ function TripList({
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View"><Eye className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Send Email" onClick={() => setEmailTarget(trip.client)}><Mail className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
                           </div>
                         </td>
@@ -356,37 +354,6 @@ function TripList({
         onFromScratch={onCreateClientFromScratch}
       />
 
-      {/* Send Email modal */}
-      <Dialog open={!!emailTarget} onOpenChange={(v) => !v && setEmailTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Email{emailTarget ? ` to ${emailTarget}` : ""}</DialogTitle>
-            <DialogDescription>Add a personalized message to include with the trip details.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Personalized message</Label>
-            <Textarea
-              rows={6}
-              value={emailMessage}
-              onChange={(e) => setEmailMessage(e.target.value)}
-              placeholder="Hi, here are the latest details for your trip…"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEmailTarget(null)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                toast({ title: "Email sent", description: emailTarget ? `Sent to ${emailTarget}` : undefined });
-                setEmailMessage("");
-                setEmailTarget(null);
-              }}
-            >
-              <Send className="h-4 w-4 mr-2" /> Send
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
     </motion.div>
   );
 }
@@ -406,6 +373,7 @@ function TripEditor({
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
   const [tripEndDate, setTripEndDate] = useState<Date | undefined>();
   const [activeFromError, setActiveFromError] = useState<string | null>(null);
+  const [travelParty, setTravelParty] = useState<TravelPartyMember[]>([]);
 
   const validateActiveFrom = (date: Date | undefined) => {
     if (!date) {
@@ -519,6 +487,14 @@ function TripEditor({
                     <Label className="text-xs">Country</Label>
                     <Input placeholder="Belgium" />
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <TravelPartySection
+                    members={travelParty}
+                    onChange={setTravelParty}
+                    showHelperNote
+                  />
                 </div>
               </CardContent>
             </Card>
