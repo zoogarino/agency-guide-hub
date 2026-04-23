@@ -27,7 +27,8 @@ export interface MockClient {
   trip: string;
   tripId?: string;
   date: string;
-  link: string;
+  link: string; // legacy plain URL fallback
+  accessLink?: AccessLink;
   activeFrom?: string;
   tripEndDate?: string;
   durationMonths?: 3 | 6 | 12;
