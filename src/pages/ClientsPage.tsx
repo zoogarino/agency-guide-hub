@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
+import { Plus, Search, CalendarIcon, Mail, RefreshCw, MoreHorizontal, Info } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
@@ -20,8 +24,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import CredentialsEmailModal from "@/components/CredentialsEmailModal";
 
-import { mockClients, statusBadgeClass, resolveClientStatus } from "@/data/mockClients";
+import {
+  mockClients, statusBadgeClass, resolveClientStatus,
+  resolveCredentialsStatus, credentialsBadgeClass,
+  type MockClient, type CredentialsState,
+} from "@/data/mockClients";
 
 export default function ClientsPage() {
   const { toast } = useToast();
