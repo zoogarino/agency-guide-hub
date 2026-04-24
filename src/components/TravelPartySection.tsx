@@ -9,9 +9,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import CredentialsEmailModal from "@/components/CredentialsEmailModal";
 import {
@@ -145,27 +142,18 @@ export default function TravelPartySection({
                     <Button variant="ghost" size="sm" onClick={() => openEdit(m)}>
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
-                    {hasSent ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEmailModal(m, false)}>
-                            <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEmailModal(m, true)}>
-                            <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={() => openEmailModal(m, false)}>
-                        <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEmailModal(m, hasSent)}
+                    >
+                      {hasSent ? (
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      ) : (
+                        <Mail className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      {hasSent ? "Resend Credentials" : "Send Credentials"}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleRemove(m.id)}>
                       <X className="h-4 w-4 mr-1" /> Remove
                     </Button>

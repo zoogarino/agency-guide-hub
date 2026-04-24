@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import CredentialsEmailModal from "@/components/CredentialsEmailModal";
+import CredentialsRecipientModal, { type RecipientChoice } from "@/components/CredentialsRecipientModal";
 
 import {
   mockClients, statusBadgeClass, resolveClientStatus,
@@ -43,8 +44,10 @@ export default function ClientsPage() {
   const [dob, setDob] = useState<Date | undefined>();
   const [credOverrides, setCredOverrides] = useState<CredOverrides>({});
 
-  // Email modal state
+  // Email flow state
+  const [recipientPickerClient, setRecipientPickerClient] = useState<MockClient | null>(null);
   const [emailingClient, setEmailingClient] = useState<MockClient | null>(null);
+  const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
 
   useEffect(() => {
@@ -63,13 +66,20 @@ export default function ClientsPage() {
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
 
   const handleCreate = () => {
-    toast({ title: "Client created", description: "Use the Email Client action to send their login credentials." });
+    toast({ title: "Client created", description: "Use the Send Credentials action to send their login credentials." });
     setSheetOpen(false);
   };
 
-  const openEmail = (c: MockClient, resend: boolean) => {
-    setEmailingClient(c);
+  const openRecipientPicker = (c: MockClient, resend: boolean) => {
     setIsResend(resend);
+    setRecipientPickerClient(c);
+  };
+
+  const handleRecipientChoice = (choice: RecipientChoice) => {
+    if (!recipientPickerClient) return;
+    setEmailRecipients(choice);
+    setEmailingClient(recipientPickerClient);
+    setRecipientPickerClient(null);
   };
 
   const handleSendCredentials = (note: string) => {
@@ -84,9 +94,16 @@ export default function ClientsPage() {
         activated: existing?.activated ?? false,
       },
     }));
+    const partyCount = emailingClient.travelParty?.length ?? 0;
+    const scopeText =
+      emailRecipients === "primary"
+        ? `Email delivered to ${emailingClient.email}`
+        : emailRecipients === "party"
+          ? `Email delivered to ${partyCount} travel party member${partyCount === 1 ? "" : "s"}`
+          : `Email delivered to ${emailingClient.email} and ${partyCount} travel party member${partyCount === 1 ? "" : "s"}`;
     toast({
       title: wasResend ? "Credentials resent" : "Credentials sent",
-      description: `Email delivered to ${emailingClient.email}${note ? " with personal note" : ""}.`,
+      description: `${scopeText}${note ? " with personal note" : ""}.`,
     });
     setEmailingClient(null);
   };
@@ -220,6 +237,18 @@ export default function ClientsPage() {
                               </Tooltip>
                             </TooltipProvider>
                           )}
+                          {credStatus === "Sent" && status === "Active" && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertTriangle className="h-4 w-4 text-warning cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  Client has not activated their account yet — their premium window is open but they cannot access the app. Consider following up directly.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -236,34 +265,18 @@ export default function ClientsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1">
-                          {(() => {
-                            const isResendContext = status === "Expired" || credStatus === "Account Activated";
-                            const buttonLabel = isResendContext ? "Resend Credentials" : "Email Client";
-                            if (hasSent) {
-                              return (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <Mail className="h-3.5 w-3.5 mr-1.5" /> {buttonLabel}
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => openEmail(client, false)}>
-                                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => openEmail(client, true)}>
-                                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              );
-                            }
-                            return (
-                              <Button variant="outline" size="sm" onClick={() => openEmail(client, false)}>
-                                <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                              </Button>
-                            );
-                          })()}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRecipientPicker(client, hasSent)}
+                          >
+                            {hasSent ? (
+                              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                            ) : (
+                              <Mail className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            {hasSent ? "Resend Credentials" : "Send Credentials"}
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
@@ -289,6 +302,15 @@ export default function ClientsPage() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Recipient choice modal */}
+      <CredentialsRecipientModal
+        open={!!recipientPickerClient}
+        onOpenChange={(v) => !v && setRecipientPickerClient(null)}
+        hasTravelParty={(recipientPickerClient?.travelParty?.length ?? 0) > 0}
+        isResend={isResend}
+        onSelect={handleRecipientChoice}
+      />
 
       {/* Credentials email modal */}
       {emailingClient && (

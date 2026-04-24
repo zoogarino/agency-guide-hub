@@ -27,7 +27,7 @@ export default function LoginPage() {
         <div className="mb-10 flex flex-col items-center gap-3">
           <img src={pgnLogo} alt="Pocket Guide Namibia" className="h-16 w-16 rounded-xl object-cover" />
           <h1 className="font-heading text-2xl font-bold">Agency Portal</h1>
-          <p className="text-sm text-muted-foreground">Sign in with the credentials provided by PGN</p>
+          <p className="text-sm text-muted-foreground">Sign in with the credentials provided by Pocket Guide Namibia</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">

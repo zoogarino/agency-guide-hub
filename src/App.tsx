@@ -8,7 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ClientsPage from "./pages/ClientsPage";
 import ClientProfilePage from "./pages/ClientProfilePage";
 import TripManagerPage from "./pages/TripManagerPage";
-import MapSettingsPage from "./pages/MapSettingsPage";
+
 import RequestPinPage from "./pages/RequestPinPage";
 
 import SettingsPage from "./pages/SettingsPage";
@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/clients/:id" element={<ClientProfilePage />} />
           <Route path="/trip-manager" element={<TripManagerPage />} />
-          <Route path="/map-settings" element={<MapSettingsPage />} />
+          <Route path="/map-settings" element={<Navigate to="/settings" replace />} />
           <Route path="/request-pin" element={<RequestPinPage />} />
           
           <Route path="/settings" element={<SettingsPage />} />

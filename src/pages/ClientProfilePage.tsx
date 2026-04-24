@@ -12,9 +12,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,6 +21,7 @@ import {
 } from "@/data/mockClients";
 import TravelPartySection from "@/components/TravelPartySection";
 import CredentialsEmailModal from "@/components/CredentialsEmailModal";
+import CredentialsRecipientModal, { type RecipientChoice } from "@/components/CredentialsRecipientModal";
 
 interface ActivityEvent {
   date: string;
@@ -40,6 +38,8 @@ export default function ClientProfilePage() {
   const [credentials, setCredentials] = useState<CredentialsState | undefined>(client?.credentials);
   const [travelParty, setTravelParty] = useState<TravelPartyMember[]>(client?.travelParty || []);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [recipientPickerOpen, setRecipientPickerOpen] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
   const [extraActivity, setExtraActivity] = useState<ActivityEvent[]>([]);
 
@@ -119,8 +119,36 @@ export default function ClientProfilePage() {
   ];
   const activity = [...baseActivity, ...extraActivity];
 
-  const openEmail = (resend: boolean) => {
-    setIsResend(resend);
+  const hasSentCredentials = !!credentials;
+
+  const openRecipientPicker = () => {
+    setIsResend(hasSentCredentials);
+    setRecipientPickerOpen(true);
+  };
+
+  const handleRecipientChoice = (choice: RecipientChoice) => {
+    setEmailRecipients(choice);
+    setRecipientPickerOpen(false);
+    // For "party only", skip primary email modal — log directly per member-event in toast.
+    // For "primary" and "all", open the email composer for the primary client.
+    if (choice === "party") {
+      const partyCount = travelParty.length;
+      setExtraActivity((prev) => [
+        ...prev,
+        {
+          date: format(new Date(), "yyyy-MM-dd"),
+          description: hasSentCredentials
+            ? `Credentials email resent to travel party (${partyCount} member${partyCount === 1 ? "" : "s"})`
+            : `Credentials email sent to travel party (${partyCount} member${partyCount === 1 ? "" : "s"})`,
+          agent: "Jane Smith",
+        },
+      ]);
+      toast({
+        title: hasSentCredentials ? "Credentials resent" : "Credentials sent",
+        description: `Email delivered to ${partyCount} travel party member${partyCount === 1 ? "" : "s"}.`,
+      });
+      return;
+    }
     setEmailModalOpen(true);
   };
 
@@ -131,17 +159,20 @@ export default function ClientProfilePage() {
       resentCount: (credentials?.resentCount ?? 0) + (wasResend ? 1 : 0),
       activated: credentials?.activated ?? false,
     });
+    const partyCount = travelParty.length;
+    const includesParty = emailRecipients === "all";
+    const desc = includesParty
+      ? `Credentials email ${wasResend ? "resent" : "sent"} to client and travel party (${partyCount} member${partyCount === 1 ? "" : "s"})`
+      : `Credentials email ${wasResend ? "resent" : "sent"}`;
     setExtraActivity((prev) => [
       ...prev,
-      {
-        date: format(new Date(), "yyyy-MM-dd"),
-        description: wasResend ? "Credentials email resent" : "Credentials email sent",
-        agent: "Jane Smith",
-      },
+      { date: format(new Date(), "yyyy-MM-dd"), description: desc, agent: "Jane Smith" },
     ]);
     toast({
       title: wasResend ? "Credentials resent" : "Credentials sent",
-      description: `Email delivered to ${client.email}${note ? " with personal note" : ""}.`,
+      description: includesParty
+        ? `Email delivered to ${client.email} and ${partyCount} travel party member${partyCount === 1 ? "" : "s"}${note ? " with personal note" : ""}.`
+        : `Email delivered to ${client.email}${note ? " with personal note" : ""}.`,
     });
   };
 
@@ -217,27 +248,14 @@ export default function ClientProfilePage() {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {credentials ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="default" size="sm">
-                      <Mail className="h-4 w-4 mr-1.5" /> Email Client
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => openEmail(false)}>
-                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openEmail(true)}>
-                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button variant="default" size="sm" onClick={() => openEmail(false)}>
-                  <Mail className="h-4 w-4 mr-1.5" /> Email Client
-                </Button>
-              )}
+              <Button variant="default" size="sm" onClick={openRecipientPicker}>
+                {hasSentCredentials ? (
+                  <RefreshCw className="h-4 w-4 mr-1.5" />
+                ) : (
+                  <Mail className="h-4 w-4 mr-1.5" />
+                )}
+                {hasSentCredentials ? "Resend Credentials" : "Send Credentials"}
+              </Button>
             </div>
 
             {canActivate && (
@@ -353,6 +371,15 @@ export default function ClientProfilePage() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Recipient choice modal */}
+      <CredentialsRecipientModal
+        open={recipientPickerOpen}
+        onOpenChange={setRecipientPickerOpen}
+        hasTravelParty={travelParty.length > 0}
+        isResend={hasSentCredentials}
+        onSelect={handleRecipientChoice}
+      />
 
       {/* Credentials email modal — primary client */}
       <CredentialsEmailModal

@@ -61,16 +61,16 @@ export default function CredentialsEmailModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Fixed PGN-controlled preview */}
+        {/* Fixed Pocket Guide Namibia-controlled preview */}
         <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3 text-sm">
           <div className="border-b border-border pb-2 mb-2">
-            <p className="font-heading font-bold text-primary">PGN — Pocket Guide Namibia</p>
+            <p className="font-heading font-bold text-primary">Pocket Guide Namibia</p>
             <p className="text-[11px] text-muted-foreground">no-reply@pocketguide-namibia.com → {recipientEmail}</p>
           </div>
 
-          <p className="font-medium">Welcome to your PGN experience, {recipientName}!</p>
+          <p className="font-medium">Welcome to your Pocket Guide Namibia experience, {recipientName}!</p>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Your travel agency has set up your personal PGN app access. Use the credentials below to log in and unlock your premium itinerary, offline maps, and exclusive travel content.
+            Your travel agency has set up your personal Pocket Guide Namibia app access. Use the credentials below to log in and unlock your premium itinerary, offline maps, and exclusive travel content.
           </p>
 
           <div className="rounded-md bg-background border border-border p-3 space-y-1.5">
@@ -97,7 +97,7 @@ export default function CredentialsEmailModal({
           </div>
 
           <p className="text-[10px] text-muted-foreground italic border-t border-border pt-2">
-            This is an automated message from PGN. Please do not reply.
+            This is an automated message from Pocket Guide Namibia. Please do not reply.
           </p>
         </div>
 

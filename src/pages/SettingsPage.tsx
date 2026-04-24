@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Upload, Pencil, Power, Plus, CreditCard } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, Pencil, Power, Plus, CreditCard, Hotel, Eye, Info } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+
+type AccommodationMode = "show_all" | "custom";
+const DEFAULT_MAP_MODE: AccommodationMode = "custom";
 
 const mockAgencyUsers = [
   { id: 1, name: "Jan Peeters", email: "jan@jokertravel.be", status: "Active" },
@@ -38,8 +41,14 @@ export default function SettingsPage() {
   const [editingUser, setEditingUser] = useState<typeof mockAgencyUsers[number] | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [mapMode, setMapMode] = useState<AccommodationMode>(DEFAULT_MAP_MODE);
 
   const usagePct = Math.round((subscription.customTripsUsed / subscription.customTripLimit) * 100);
+
+  const mapOptions: { value: AccommodationMode; label: string; desc: string; icon: React.ElementType }[] = [
+    { value: "show_all", label: "Show All", desc: "Clients see all accommodation pins on the map.", icon: Eye },
+    { value: "custom", label: "Custom Selection", desc: "Clients see only the specific accommodations you choose.", icon: Hotel },
+  ];
 
   const openEdit = (u: typeof mockAgencyUsers[number]) => {
     setEditingUser(u);
@@ -109,6 +118,81 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground mt-2">
                 {subscription.customTripLimit - subscription.customTripsUsed} custom trips remaining on your current plan.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Map Settings */}
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-primary/10 p-2.5">
+                <Hotel className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-heading text-lg font-semibold">Client Map Settings — Pin Visibility</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Control what your clients see on their map. These settings apply to all clients created under your account.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {mapOptions.map((opt) => {
+                const isActive = mapMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setMapMode(opt.value)}
+                    className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
+                      isActive ? "border-primary bg-accent/40" : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <div className={`rounded-lg p-2 ${isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                      <opt.icon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold">{opt.label}</span>
+                        <div className={`h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          isActive ? "border-primary bg-primary" : "border-muted-foreground"
+                        }`}>
+                          {isActive && <div className="h-1 w-1 rounded-full bg-primary-foreground" />}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <AnimatePresence>
+              {mapMode === "custom" && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p className="text-sm text-foreground leading-relaxed">
+                      When Custom Selection is active, each client will automatically see only the accommodation pins that are included as stops in their assigned trip. No manual configuration is needed — the map updates automatically based on each client's itinerary. Clients without an assigned trip will see no accommodation pins until a trip is assigned to their account.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex gap-3 pt-1">
+              <Button onClick={() => toast({ title: "Map settings saved", description: "Client map settings have been updated." })}>
+                Save Settings
+              </Button>
+              <Button variant="outline" onClick={() => { setMapMode(DEFAULT_MAP_MODE); toast({ title: "Map settings reset to default" }); }}>
+                Reset to Default
+              </Button>
             </div>
           </CardContent>
         </Card>

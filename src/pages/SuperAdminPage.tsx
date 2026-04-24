@@ -36,8 +36,8 @@ function AdminSidebar({ section, setSection }: { section: string; setSection: (s
   return (
     <aside className="flex flex-col bg-sidebar text-sidebar-foreground w-[250px]">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <img src={pgnLogo} alt="PGN" className="h-9 w-9 rounded-md object-cover" />
-        <span className="font-heading text-sm font-bold text-sidebar-accent-foreground whitespace-nowrap">PGN Super Admin</span>
+        <img src={pgnLogo} alt="Pocket Guide Namibia" className="h-9 w-9 rounded-md object-cover" />
+        <span className="font-heading text-sm font-bold text-sidebar-accent-foreground whitespace-nowrap">Pocket Guide Namibia Super Admin</span>
       </div>
       <nav className="flex-1 py-4 px-2 space-y-1">
         {items.map((item) => (
@@ -167,8 +167,8 @@ export default function SuperAdminPage() {
       <main className="flex-1 overflow-auto">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-8 py-4">
           <div className="flex items-center gap-3">
-            <img src={pgnLogo} alt="PGN" className="h-8 w-8 rounded object-cover" />
-            <span className="font-heading text-sm font-semibold">PGN Super Admin</span>
+            <img src={pgnLogo} alt="Pocket Guide Namibia" className="h-8 w-8 rounded object-cover" />
+            <span className="font-heading text-sm font-semibold">Pocket Guide Namibia Super Admin</span>
           </div>
         </header>
         <div className="p-8">
