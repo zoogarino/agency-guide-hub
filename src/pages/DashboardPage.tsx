@@ -2,17 +2,17 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { differenceInDays, parseISO, format } from "date-fns";
+import { differenceInDays, parseISO, format, addDays } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { mockClients } from "@/data/mockClients";
+import { mockClients, resolveClientStatus } from "@/data/mockClients";
 
 const recentActivity = [
   { text: "New client account created for Sarah Miller", time: "2 hours ago", type: "client" },
-  { text: "Etosha Explorer trip shared with John Doe", time: "5 hours ago", type: "trip" },
+  { text: "Credentials sent to John Doe", time: "5 hours ago", type: "trip" },
   { text: "Pin request submitted: Waterberg Plateau", time: "8 hours ago", type: "pin" },
   { text: "New client account created for Hans Weber", time: "1 day ago", type: "client" },
-  { text: "Skeleton Coast Adventure trip updated", time: "1 day ago", type: "trip" },
+  { text: "Credentials sent to Marie Dupont", time: "1 day ago", type: "trip" },
   { text: "Pin request submitted: Fish River Canyon Viewpoint", time: "2 days ago", type: "pin" },
 ];
 
@@ -20,8 +20,9 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [clientsExpanded, setClientsExpanded] = useState(false);
 
+  const today = new Date();
+
   const outdatedClients = useMemo(() => {
-    const today = new Date();
     return mockClients.filter((c) => {
       if (!c.activeFrom || c.tripCompleted) return false;
       const days = differenceInDays(today, parseISO(c.activeFrom));
@@ -29,19 +30,47 @@ export default function DashboardPage() {
     });
   }, []);
 
+  // Status breakdown across all clients
+  const statusCounts = useMemo(() => {
+    const counts = { Active: 0, Pending: 0, Expired: 0, Unscheduled: 0 } as Record<string, number>;
+    mockClients.forEach((c) => {
+      const s = resolveClientStatus(c);
+      counts[s] = (counts[s] ?? 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  const totalClients = mockClients.length;
+
+  // Active trips: clients with trips assigned & not Expired/Unscheduled
+  const activeTripsCount = useMemo(
+    () => mockClients.filter((c) => c.tripId && ["Active", "Pending"].includes(resolveClientStatus(c))).length,
+    []
+  );
+
+  // "Starting soon" — clients whose Premium Unlock date (Active From - 7 days) falls in the next 14 days
+  const startingSoonCount = useMemo(() => {
+    return mockClients.filter((c) => {
+      if (!c.activeFrom) return false;
+      const unlock = addDays(parseISO(c.activeFrom), -7);
+      const diff = differenceInDays(unlock, today);
+      return diff >= 0 && diff <= 14;
+    }).length;
+  }, []);
+
   const stats = [
     {
       label: "Total Clients",
-      value: "24",
+      value: String(totalClients),
       icon: Users,
-      change: "+3 this week",
+      change: `+${Math.min(3, totalClients)} this week`,
       expandable: true,
     },
     {
       label: "Active Trips",
-      value: "12",
+      value: String(activeTripsCount),
       icon: Map,
-      change: "2 starting soon",
+      change: startingSoonCount > 0 ? `${startingSoonCount} starting soon` : "No trips starting soon",
       expandable: false,
     },
     {
