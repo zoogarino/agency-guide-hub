@@ -359,10 +359,38 @@ export default function ClientProfilePage() {
         open={emailModalOpen}
         onOpenChange={setEmailModalOpen}
         recipientName={client.name}
-        recipientEmail={client.email}
+        recipientEmail={details.email}
         isResend={isResend}
         onSend={handleSendCredentials}
       />
+
+      {/* Edit Client Details modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Edit Client Details</DialogTitle>
+            <DialogDescription>Update {client.name}'s account information.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label className="text-xs">First Name</Label><Input value={editDraft.firstName} onChange={(e) => setEditDraft({ ...editDraft, firstName: e.target.value })} /></div>
+              <div className="space-y-2"><Label className="text-xs">Last Name</Label><Input value={editDraft.lastName} onChange={(e) => setEditDraft({ ...editDraft, lastName: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label className="text-xs">Title</Label><Input value={editDraft.title} onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })} /></div>
+              <div className="space-y-2"><Label className="text-xs">Username</Label><Input value={editDraft.username} onChange={(e) => setEditDraft({ ...editDraft, username: e.target.value })} /></div>
+            </div>
+            <div className="space-y-2"><Label className="text-xs">Date of Birth</Label><Input value={editDraft.dob} onChange={(e) => setEditDraft({ ...editDraft, dob: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Country</Label><Input value={editDraft.country} onChange={(e) => setEditDraft({ ...editDraft, country: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Email</Label><Input type="email" value={editDraft.email} onChange={(e) => setEditDraft({ ...editDraft, email: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Phone Number</Label><Input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setDetails(editDraft); setEditOpen(false); toast({ title: "Client details updated" }); }}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PortalLayout>
   );
 }
