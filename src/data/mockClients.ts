@@ -96,50 +96,65 @@ export function resolveClientStatus(client: {
 }
 
 export const mockClients: MockClient[] = [
+  // Active + Account Activated
   {
     id: 1, name: "Sarah Miller", firstName: "Sarah", lastName: "Miller",
     title: "Ms", username: "sarahm", dob: "1988-06-12",
     email: "sarah@example.com", phone: "+44 7700 900123", country: "United Kingdom",
-    trip: "Etosha Explorer", tripId: "trip-etosha", date: "2026-02-20",
+    trip: "Sossusvlei Quick Escape (Sarah)", tripId: "trip-sossus-sarah", date: "2026-04-15",
     link: "",
     credentials: { sentAt: "2026-04-15T14:32:00Z", activated: true },
-    activeFrom: "2026-04-25", tripEndDate: "2026-05-07", durationMonths: 6,
+    activeFrom: "2026-04-25", tripEndDate: "2026-04-30", durationMonths: 6,
     travelParty: [{
       id: "tp1", name: "James Miller", email: "james@example.com",
       credentials: { sentAt: "2026-04-15T14:35:00Z", activated: false },
     }],
   },
+  // Pending + Sent
   {
     id: 2, name: "John Doe", firstName: "John", lastName: "Doe",
     title: "Mr", username: "johnd", dob: "1979-11-03",
     email: "john@example.com", phone: "+1 415 555 0143", country: "United States",
-    trip: "Skeleton Coast Adventure", tripId: "trip-skeleton", date: "2026-02-18",
+    trip: "Etosha Explorer (John)", tripId: "trip-etosha-john", date: "2026-04-18",
     link: "",
-    credentials: { sentAt: "2026-04-10T09:15:00Z", activated: false },
-    activeFrom: "2026-05-10", tripEndDate: "2026-05-25", durationMonths: 3,
+    credentials: { sentAt: "2026-04-19T09:15:00Z", activated: false },
+    activeFrom: "2026-05-20", tripEndDate: "2026-06-01", durationMonths: 3,
   },
+  // Expired
   {
     id: 3, name: "Hans Weber", firstName: "Hans", lastName: "Weber",
     title: "Dr", username: "hansw", dob: "1965-03-22",
     email: "hans@example.com", phone: "+49 30 1234 5678", country: "Germany",
-    trip: "Sossusvlei Dunes", tripId: "trip-sossus", date: "2025-07-15",
+    trip: "Etosha Explorer (Hans)", tripId: "trip-etosha-hans", date: "2025-09-10",
     link: "",
-    credentials: { sentAt: "2025-07-20T11:00:00Z", activated: true },
-    activeFrom: "2025-08-01", tripEndDate: "2025-08-14", durationMonths: 6,
+    credentials: { sentAt: "2025-09-12T11:00:00Z", activated: true },
+    activeFrom: "2025-09-20", tripEndDate: "2025-10-02", durationMonths: 3,
   },
+  // Active (recent)
   {
     id: 4, name: "Marie Dupont", firstName: "Marie", lastName: "Dupont",
     title: "Mrs", username: "maried", dob: "1982-09-30",
     email: "marie@example.com", phone: "+33 6 12 34 56 78", country: "France",
-    trip: "Fish River Canyon", tripId: "trip-fish", date: "2025-10-10",
+    trip: "Sossusvlei Quick Escape (Marie)", tripId: "trip-sossus-marie", date: "2026-04-10",
     link: "",
-    activeFrom: "2025-10-18", tripEndDate: "2025-10-30", durationMonths: 12,
+    credentials: { sentAt: "2026-04-11T10:00:00Z", activated: false },
+    activeFrom: "2026-04-22", tripEndDate: "2026-04-28", durationMonths: 12,
   },
+  // Unscheduled — no trip yet
   {
     id: 5, name: "Tom Brown", firstName: "Tom", lastName: "Brown",
     title: "Mr", username: "tomb", dob: "1990-01-14",
     email: "tom@example.com", phone: "+44 7700 900456", country: "United Kingdom",
-    trip: "—", date: "2026-02-08", link: "",
+    trip: "—", date: "2026-04-21", link: "",
+  },
+  // Pending + Not Sent — most common state right after client creation
+  {
+    id: 6, name: "Anna Schmidt", firstName: "Anna", lastName: "Schmidt",
+    title: "Ms", username: "annas", dob: "1985-04-08",
+    email: "anna@example.com", phone: "+49 151 9876 5432", country: "Germany",
+    trip: "Grand Namibia Expedition (Anna)", tripId: "trip-grand-anna", date: "2026-04-23",
+    link: "",
+    activeFrom: "2026-06-15", tripEndDate: "2026-07-06", durationMonths: 6,
   },
 ];
 
