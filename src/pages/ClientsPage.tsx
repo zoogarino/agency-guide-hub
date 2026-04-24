@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, CalendarIcon, Mail, RefreshCw, MoreHorizontal, Info } from "lucide-react";
+import { Plus, Search, CalendarIcon, Mail, RefreshCw, AlertTriangle, MoreHorizontal, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -212,10 +212,10 @@ export default function ClientsPage() {
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                  <AlertTriangle className="h-4 w-4 text-warning cursor-help" />
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-xs">
-                                  Credentials have not been sent to this client yet. Open the client profile or use the Email Client action to send their account details.
+                                  Credentials not sent — this client cannot access the app yet.
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -236,27 +236,49 @@ export default function ClientsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1">
-                          {hasSent ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openEmail(client, false)}>
-                                  <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openEmail(client, true)}>
-                                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          ) : (
-                            <Button variant="outline" size="sm" onClick={() => openEmail(client, false)}>
-                              <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                            </Button>
-                          )}
+                          {(() => {
+                            const isResendContext = status === "Expired" || credStatus === "Account Activated";
+                            const buttonLabel = isResendContext ? "Resend Credentials" : "Email Client";
+                            if (hasSent) {
+                              return (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Mail className="h-3.5 w-3.5 mr-1.5" /> {buttonLabel}
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEmail(client, false)}>
+                                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => openEmail(client, true)}>
+                                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              );
+                            }
+                            return (
+                              <Button variant="outline" size="sm" onClick={() => openEmail(client, false)}>
+                                <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
+                              </Button>
+                            );
+                          })()}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => toast({ title: "Client deleted", description: `${client.name} was removed from your client list.` })}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete Client
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
