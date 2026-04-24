@@ -643,7 +643,7 @@ function TripEditor({
               <Label className="text-xs text-muted-foreground">Add Stops</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search PGN pins..." className="pl-9" value={pinSearch} onChange={(e) => setPinSearch(e.target.value)} />
+                <Input placeholder="Search Pocket Guide Namibia pins..." className="pl-9" value={pinSearch} onChange={(e) => setPinSearch(e.target.value)} />
               </div>
               {pinSearch && (
                 <div className="max-h-48 overflow-y-auto space-y-1">

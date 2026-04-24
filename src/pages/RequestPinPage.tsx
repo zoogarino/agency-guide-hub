@@ -203,7 +203,7 @@ export default function RequestPinPage() {
                   <p>{viewing.additionalNotes}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1">PGN Notes</p>
+                  <p className="text-muted-foreground mb-1">Pocket Guide Namibia Notes</p>
                   <p>{viewing.notes}</p>
                 </div>
                 <div className="border-t pt-3">

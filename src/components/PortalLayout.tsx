@@ -38,7 +38,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       >
         {/* Logo area */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-          <img src={pgnLogo} alt="PGN" className="h-9 w-9 rounded-md object-cover shrink-0" />
+          <img src={pgnLogo} alt="Pocket Guide Namibia" className="h-9 w-9 rounded-md object-cover shrink-0" />
           {!collapsed && (
             <span className="font-heading text-sm font-bold text-sidebar-accent-foreground whitespace-nowrap">
               Pocket Guide Namibia
@@ -105,7 +105,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         {/* Header */}
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-8 py-4">
           <div className="flex items-center gap-4">
-            <img src={pgnLogo} alt="PGN" className="h-8 w-8 rounded object-cover" />
+            <img src={pgnLogo} alt="Pocket Guide Namibia" className="h-8 w-8 rounded object-cover" />
             <span className="text-muted-foreground text-sm">×</span>
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
