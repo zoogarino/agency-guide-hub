@@ -12,9 +12,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,6 +21,7 @@ import {
 } from "@/data/mockClients";
 import TravelPartySection from "@/components/TravelPartySection";
 import CredentialsEmailModal from "@/components/CredentialsEmailModal";
+import CredentialsRecipientModal, { type RecipientChoice } from "@/components/CredentialsRecipientModal";
 
 interface ActivityEvent {
   date: string;
@@ -40,6 +38,8 @@ export default function ClientProfilePage() {
   const [credentials, setCredentials] = useState<CredentialsState | undefined>(client?.credentials);
   const [travelParty, setTravelParty] = useState<TravelPartyMember[]>(client?.travelParty || []);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [recipientPickerOpen, setRecipientPickerOpen] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
   const [extraActivity, setExtraActivity] = useState<ActivityEvent[]>([]);
 
