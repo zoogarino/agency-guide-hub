@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Upload, Pencil, Power, Plus, CreditCard } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, Pencil, Power, Plus, CreditCard, Hotel, Eye, Info } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+
+type AccommodationMode = "show_all" | "custom";
+const DEFAULT_MAP_MODE: AccommodationMode = "custom";
 
 const mockAgencyUsers = [
   { id: 1, name: "Jan Peeters", email: "jan@jokertravel.be", status: "Active" },
@@ -38,8 +41,14 @@ export default function SettingsPage() {
   const [editingUser, setEditingUser] = useState<typeof mockAgencyUsers[number] | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [mapMode, setMapMode] = useState<AccommodationMode>(DEFAULT_MAP_MODE);
 
   const usagePct = Math.round((subscription.customTripsUsed / subscription.customTripLimit) * 100);
+
+  const mapOptions: { value: AccommodationMode; label: string; desc: string; icon: React.ElementType }[] = [
+    { value: "show_all", label: "Show All", desc: "Clients see all accommodation pins on the map.", icon: Eye },
+    { value: "custom", label: "Custom Selection", desc: "Clients see only the specific accommodations you choose.", icon: Hotel },
+  ];
 
   const openEdit = (u: typeof mockAgencyUsers[number]) => {
     setEditingUser(u);
