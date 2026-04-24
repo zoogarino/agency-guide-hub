@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Upload, Edit, UserX, Plus, CreditCard } from "lucide-react";
+import { Upload, Pencil, Power, Plus, CreditCard } from "lucide-react";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 
 const mockAgencyUsers = [
@@ -33,8 +34,32 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [agencyName, setAgencyName] = useState("Joker Travel");
   const [addUserOpen, setAddUserOpen] = useState(false);
+  const [users, setUsers] = useState(mockAgencyUsers);
+  const [editingUser, setEditingUser] = useState<typeof mockAgencyUsers[number] | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
   const usagePct = Math.round((subscription.customTripsUsed / subscription.customTripLimit) * 100);
+
+  const openEdit = (u: typeof mockAgencyUsers[number]) => {
+    setEditingUser(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
+  };
+
+  const saveEdit = () => {
+    if (!editingUser) return;
+    setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? { ...u, name: editName, email: editEmail } : u)));
+    toast({ title: "Agency-user updated" });
+    setEditingUser(null);
+  };
+
+  const toggleStatus = (id: number) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, status: u.status === "Active" ? "Disabled" : "Active" } : u))
+    );
+    toast({ title: "Status updated" });
+  };
 
   return (
     <PortalLayout>
