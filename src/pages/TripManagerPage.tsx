@@ -23,6 +23,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import TravelPartySection from "@/components/TravelPartySection";
 import type { TravelPartyMember } from "@/data/mockClients";
@@ -269,6 +270,7 @@ function TripList({
                   <thead>
                     <tr className="border-b text-left text-xs text-muted-foreground">
                       <th className="px-6 py-3 font-medium">Trip Name</th>
+                      <th className="px-6 py-3 font-medium">Usage</th>
                       <th className="px-6 py-3 font-medium">Duration</th>
                       <th className="px-6 py-3 font-medium">Distance</th>
                       <th className="px-6 py-3 font-medium">Stops</th>
@@ -280,21 +282,43 @@ function TripList({
                     {mockTemplates.map((trip, i) => (
                       <tr key={trip.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
                         <td className="px-6 py-4 text-sm font-medium">{trip.name}</td>
+                        <td className="px-6 py-4 text-sm">
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            Used {trip.usageCount ?? 0} {trip.usageCount === 1 ? "time" : "times"}
+                          </Badge>
+                        </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.duration}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.distance}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.stops}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditTemplate(trip.id)} title="Edit">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Preview">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Preview — read-only client view</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditTemplate(trip.id)} aria-label="Edit">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit — open backend editor</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete template</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <Button size="sm" className="ml-2 h-8 text-xs" onClick={() => onUseForClient(trip)}>
                               <Users className="h-3.5 w-3.5 mr-1.5" /> Use for Client
                             </Button>
