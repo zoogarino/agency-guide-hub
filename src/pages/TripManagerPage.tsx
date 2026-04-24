@@ -23,6 +23,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import TravelPartySection from "@/components/TravelPartySection";
 import type { TravelPartyMember } from "@/data/mockClients";
@@ -50,18 +51,21 @@ interface Stop { id: number; name: string; category: string; }
 interface Trip {
   id: number; name: string; type: "Template" | "Custom"; client: string;
   status: string; duration: string; distance: string; stops: number; lastUpdated: string;
+  usageCount?: number; // templates only — number of client trips created from this template
 }
 
+// Varied template examples: short / medium / long
 const mockTemplates: Trip[] = [
-  { id: 1, name: "Etosha Explorer", type: "Template", client: "", status: "", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "2 days ago" },
-  { id: 2, name: "Skeleton Coast Adventure", type: "Template", client: "", status: "", duration: "15 days", distance: "1,800 km", stops: 10, lastUpdated: "1 week ago" },
-  { id: 4, name: "Fish River Canyon", type: "Template", client: "", status: "", duration: "7 days", distance: "650 km", stops: 5, lastUpdated: "3 days ago" },
+  { id: 1, name: "Sossusvlei Quick Escape", type: "Template", client: "", status: "", duration: "5 days", distance: "520 km", stops: 4, lastUpdated: "2 days ago", usageCount: 3 },
+  { id: 2, name: "Etosha Explorer", type: "Template", client: "", status: "", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "1 week ago", usageCount: 7 },
+  { id: 4, name: "Grand Namibia Expedition", type: "Template", client: "", status: "", duration: "21 days", distance: "2,400 km", stops: 15, lastUpdated: "3 days ago", usageCount: 1 },
 ];
 
+// Naming convention: "Template Name (Client First Name)"
 const mockClientTrips: Trip[] = [
-  { id: 3, name: "Sossusvlei Dunes (Sarah)", type: "Custom", client: "Sarah Miller", status: "Active", duration: "10 days", distance: "900 km", stops: 6, lastUpdated: "1 day ago" },
-  { id: 5, name: "Windhoek City Tour (Marie)", type: "Custom", client: "Marie Dupont", status: "Active", duration: "3 days", distance: "120 km", stops: 3, lastUpdated: "5 days ago" },
-  { id: 6, name: "Etosha Custom (Hans)", type: "Custom", client: "Hans Weber", status: "Active", duration: "14 days", distance: "1,400 km", stops: 9, lastUpdated: "2 days ago" },
+  { id: 3, name: "Sossusvlei Quick Escape (Sarah)", type: "Custom", client: "Sarah Miller", status: "Active", duration: "5 days", distance: "520 km", stops: 4, lastUpdated: "1 day ago" },
+  { id: 5, name: "Etosha Explorer (Marie)", type: "Custom", client: "Marie Dupont", status: "Pending", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "5 days ago" },
+  { id: 6, name: "Etosha Explorer (Hans)", type: "Custom", client: "Hans Weber", status: "Expired", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "2 days ago" },
   { id: 7, name: "Southern Namibia Draft", type: "Custom", client: "Unassigned", status: "Draft", duration: "8 days", distance: "700 km", stops: 5, lastUpdated: "1 week ago" },
 ];
 
@@ -266,6 +270,7 @@ function TripList({
                   <thead>
                     <tr className="border-b text-left text-xs text-muted-foreground">
                       <th className="px-6 py-3 font-medium">Trip Name</th>
+                      <th className="px-6 py-3 font-medium">Usage</th>
                       <th className="px-6 py-3 font-medium">Duration</th>
                       <th className="px-6 py-3 font-medium">Distance</th>
                       <th className="px-6 py-3 font-medium">Stops</th>
@@ -277,21 +282,43 @@ function TripList({
                     {mockTemplates.map((trip, i) => (
                       <tr key={trip.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
                         <td className="px-6 py-4 text-sm font-medium">{trip.name}</td>
+                        <td className="px-6 py-4 text-sm">
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            Used {trip.usageCount ?? 0} {trip.usageCount === 1 ? "time" : "times"}
+                          </Badge>
+                        </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.duration}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.distance}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.stops}</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditTemplate(trip.id)} title="Edit">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Preview">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Preview — read-only client view</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditTemplate(trip.id)} aria-label="Edit">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit — open backend editor</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete template</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <Button size="sm" className="ml-2 h-8 text-xs" onClick={() => onUseForClient(trip)}>
                               <Users className="h-3.5 w-3.5 mr-1.5" /> Use for Client
                             </Button>
@@ -326,15 +353,46 @@ function TripList({
                           {trip.client === "Unassigned" ? <span className="italic text-muted-foreground/60">Unassigned</span> : trip.client}
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant={trip.status === "Active" ? "default" : "secondary"} className="text-xs">{trip.status}</Badge>
+                          {(() => {
+                            const cls = trip.status === "Active"
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : trip.status === "Pending"
+                                ? "bg-warning/15 text-warning border-warning/30"
+                                : trip.status === "Expired"
+                                  ? "bg-muted text-muted-foreground border-border"
+                                  : "bg-muted text-muted-foreground border-border";
+                            return <Badge variant="outline" className={`text-xs ${cls}`}>{trip.status}</Badge>;
+                          })()}
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View"><Eye className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Preview"><Eye className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Preview — read-only client view</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} aria-label="Edit"><Edit className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit — open backend editor</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View in Web"><Globe className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>View in Web — web preview as the client sees it</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete trip</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </td>
                       </tr>

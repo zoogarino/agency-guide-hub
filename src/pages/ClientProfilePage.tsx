@@ -7,9 +7,15 @@ import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
   mockClients, statusBadgeClass, resolveClientStatus,
@@ -36,6 +42,20 @@ export default function ClientProfilePage() {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isResend, setIsResend] = useState(false);
   const [extraActivity, setExtraActivity] = useState<ActivityEvent[]>([]);
+
+  // Editable client details (local-only mock)
+  const [editOpen, setEditOpen] = useState(false);
+  const [details, setDetails] = useState(() => ({
+    firstName: client?.firstName ?? client?.name.split(" ")[0] ?? "",
+    lastName: client?.lastName ?? client?.name.split(" ").slice(1).join(" ") ?? "",
+    title: client?.title ?? "",
+    username: client?.username ?? "",
+    dob: client?.dob ?? "",
+    country: client?.country ?? "",
+    email: client?.email ?? "",
+    phone: client?.phone ?? "",
+  }));
+  const [editDraft, setEditDraft] = useState(details);
 
   const status = useMemo(() => client ? resolveClientStatus(client) : "Unscheduled", [client]);
 
@@ -170,7 +190,7 @@ export default function ClientProfilePage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={() => navigate(`/clients?edit=${client.id}`)}>
+          <Button variant="outline" onClick={() => { setEditDraft(details); setEditOpen(true); }}>
             <Edit className="h-4 w-4 mr-2" /> Edit Client Details
           </Button>
         </div>
@@ -179,10 +199,23 @@ export default function ClientProfilePage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 flex flex-wrap items-center gap-3 justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              {client.tripId && (
+              {client.tripId ? (
                 <Button variant="default" size="sm" onClick={() => navigate(`/trip-manager?edit=${client.tripId}`)}>
                   <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
                 </Button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0}>
+                        <Button variant="default" size="sm" disabled className="pointer-events-none opacity-50">
+                          <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>No trip assigned yet — go to Trip Manager to create and assign a trip.</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {credentials ? (
                 <DropdownMenu>
@@ -230,14 +263,14 @@ export default function ClientProfilePage() {
             <CardContent className="p-6 space-y-4">
               <h2 className="font-heading text-lg font-semibold">Client Details</h2>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <Detail label="First Name" value={client.firstName ?? client.name.split(" ")[0] ?? ""} />
-                <Detail label="Last Name" value={client.lastName ?? client.name.split(" ").slice(1).join(" ")} />
-                <Detail label="Title" value={client.title} />
-                <Detail label="Username" value={client.username} />
-                <Detail label="Date of Birth" value={client.dob} />
-                <Detail label="Country" value={client.country} />
-                <Detail label="Email" value={client.email} />
-                <Detail label="Phone Number" value={client.phone} />
+                <Detail label="First Name" value={details.firstName} />
+                <Detail label="Last Name" value={details.lastName} />
+                <Detail label="Title" value={details.title} />
+                <Detail label="Username" value={details.username} />
+                <Detail label="Date of Birth" value={details.dob} />
+                <Detail label="Country" value={details.country} />
+                <Detail label="Email" value={details.email} />
+                <Detail label="Phone Number" value={details.phone} />
                 <Detail label="Account Created" value={client.date} />
               </dl>
             </CardContent>
@@ -326,10 +359,38 @@ export default function ClientProfilePage() {
         open={emailModalOpen}
         onOpenChange={setEmailModalOpen}
         recipientName={client.name}
-        recipientEmail={client.email}
+        recipientEmail={details.email}
         isResend={isResend}
         onSend={handleSendCredentials}
       />
+
+      {/* Edit Client Details modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Edit Client Details</DialogTitle>
+            <DialogDescription>Update {client.name}'s account information.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label className="text-xs">First Name</Label><Input value={editDraft.firstName} onChange={(e) => setEditDraft({ ...editDraft, firstName: e.target.value })} /></div>
+              <div className="space-y-2"><Label className="text-xs">Last Name</Label><Input value={editDraft.lastName} onChange={(e) => setEditDraft({ ...editDraft, lastName: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label className="text-xs">Title</Label><Input value={editDraft.title} onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })} /></div>
+              <div className="space-y-2"><Label className="text-xs">Username</Label><Input value={editDraft.username} onChange={(e) => setEditDraft({ ...editDraft, username: e.target.value })} /></div>
+            </div>
+            <div className="space-y-2"><Label className="text-xs">Date of Birth</Label><Input value={editDraft.dob} onChange={(e) => setEditDraft({ ...editDraft, dob: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Country</Label><Input value={editDraft.country} onChange={(e) => setEditDraft({ ...editDraft, country: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Email</Label><Input type="email" value={editDraft.email} onChange={(e) => setEditDraft({ ...editDraft, email: e.target.value })} /></div>
+            <div className="space-y-2"><Label className="text-xs">Phone Number</Label><Input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setDetails(editDraft); setEditOpen(false); toast({ title: "Client details updated" }); }}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PortalLayout>
   );
 }
