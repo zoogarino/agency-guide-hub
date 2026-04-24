@@ -248,27 +248,14 @@ export default function ClientProfilePage() {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {credentials ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="default" size="sm">
-                      <Mail className="h-4 w-4 mr-1.5" /> Email Client
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => openEmail(false)}>
-                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openEmail(true)}>
-                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button variant="default" size="sm" onClick={() => openEmail(false)}>
-                  <Mail className="h-4 w-4 mr-1.5" /> Email Client
-                </Button>
-              )}
+              <Button variant="default" size="sm" onClick={openRecipientPicker}>
+                {hasSentCredentials ? (
+                  <RefreshCw className="h-4 w-4 mr-1.5" />
+                ) : (
+                  <Mail className="h-4 w-4 mr-1.5" />
+                )}
+                {hasSentCredentials ? "Resend Credentials" : "Send Credentials"}
+              </Button>
             </div>
 
             {canActivate && (
