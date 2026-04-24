@@ -94,9 +94,16 @@ export default function ClientsPage() {
         activated: existing?.activated ?? false,
       },
     }));
+    const partyCount = emailingClient.travelParty?.length ?? 0;
+    const scopeText =
+      emailRecipients === "primary"
+        ? `Email delivered to ${emailingClient.email}`
+        : emailRecipients === "party"
+          ? `Email delivered to ${partyCount} travel party member${partyCount === 1 ? "" : "s"}`
+          : `Email delivered to ${emailingClient.email} and ${partyCount} travel party member${partyCount === 1 ? "" : "s"}`;
     toast({
       title: wasResend ? "Credentials resent" : "Credentials sent",
-      description: `Email delivered to ${emailingClient.email}${note ? " with personal note" : ""}.`,
+      description: `${scopeText}${note ? " with personal note" : ""}.`,
     });
     setEmailingClient(null);
   };
