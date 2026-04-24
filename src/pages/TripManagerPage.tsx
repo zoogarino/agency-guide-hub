@@ -353,15 +353,46 @@ function TripList({
                           {trip.client === "Unassigned" ? <span className="italic text-muted-foreground/60">Unassigned</span> : trip.client}
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant={trip.status === "Active" ? "default" : "secondary"} className="text-xs">{trip.status}</Badge>
+                          {(() => {
+                            const cls = trip.status === "Active"
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : trip.status === "Pending"
+                                ? "bg-warning/15 text-warning border-warning/30"
+                                : trip.status === "Expired"
+                                  ? "bg-muted text-muted-foreground border-border"
+                                  : "bg-muted text-muted-foreground border-border";
+                            return <Badge variant="outline" className={`text-xs ${cls}`}>{trip.status}</Badge>;
+                          })()}
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{trip.lastUpdated}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View"><Eye className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} title="Edit"><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="View in Web"><Globe className="h-4 w-4" /></Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Preview"><Eye className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Preview — read-only client view</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditClient(trip.id)} aria-label="Edit"><Edit className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit — open backend editor</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View in Web"><Globe className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>View in Web — web preview as the client sees it</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete trip</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </td>
                       </tr>
