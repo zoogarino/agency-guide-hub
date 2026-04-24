@@ -230,6 +230,18 @@ export default function ClientsPage() {
                               </Tooltip>
                             </TooltipProvider>
                           )}
+                          {credStatus === "Sent" && status === "Active" && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertTriangle className="h-4 w-4 text-warning cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  Client has not activated their account yet — their premium window is open but they cannot access the app. Consider following up directly.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -246,34 +258,18 @@ export default function ClientsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1">
-                          {(() => {
-                            const isResendContext = status === "Expired" || credStatus === "Account Activated";
-                            const buttonLabel = isResendContext ? "Resend Credentials" : "Email Client";
-                            if (hasSent) {
-                              return (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <Mail className="h-3.5 w-3.5 mr-1.5" /> {buttonLabel}
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => openEmail(client, false)}>
-                                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => openEmail(client, true)}>
-                                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              );
-                            }
-                            return (
-                              <Button variant="outline" size="sm" onClick={() => openEmail(client, false)}>
-                                <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
-                              </Button>
-                            );
-                          })()}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRecipientPicker(client, hasSent)}
+                          >
+                            {hasSent ? (
+                              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                            ) : (
+                              <Mail className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            {hasSent ? "Resend Credentials" : "Send Credentials"}
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
