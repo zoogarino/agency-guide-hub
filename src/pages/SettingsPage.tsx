@@ -170,29 +170,67 @@ export default function SettingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {mockAgencyUsers.map((user, i) => (
-                  <tr key={user.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
-                    <td className="px-4 py-3 text-sm font-medium">{user.name}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={user.status === "Active" ? "default" : "secondary"} className="text-xs">{user.status}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Disable">
-                          <UserX className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user, i) => {
+                  const isActive = user.status === "Active";
+                  return (
+                    <tr key={user.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
+                      <td className="px-4 py-3 text-sm font-medium">{user.name}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant={isActive ? "default" : "secondary"} className="text-xs">{user.status}</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(user)} aria-label="Edit user">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit user details</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => toggleStatus(user.id)}
+                                  aria-label={isActive ? "Disable user" : "Enable user"}
+                                >
+                                  <Power className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{isActive ? "Disable account" : "Enable account"}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </CardContent>
         </Card>
+
+        {/* Edit Agency-User dialog */}
+        <Dialog open={!!editingUser} onOpenChange={(v) => !v && setEditingUser(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Edit Agency-User</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2"><Label>Name</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Email</Label><Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} /></div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+              <Button onClick={saveEdit}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </PortalLayout>
   );
