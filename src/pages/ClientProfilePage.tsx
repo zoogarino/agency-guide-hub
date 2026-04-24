@@ -1,22 +1,23 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Map as MapIcon, Copy, Link as LinkIcon, Lock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Edit, Map as MapIcon, Mail, RefreshCw } from "lucide-react";
 import { format, addDays, addMonths, parseISO } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import {
   mockClients, statusBadgeClass, resolveClientStatus,
-  type TravelPartyMember, type AccessLink,
+  resolveCredentialsStatus, credentialsBadgeClass,
+  type TravelPartyMember, type CredentialsState,
 } from "@/data/mockClients";
 import TravelPartySection from "@/components/TravelPartySection";
+import CredentialsEmailModal from "@/components/CredentialsEmailModal";
 
 interface ActivityEvent {
   date: string;
@@ -30,11 +31,11 @@ export default function ClientProfilePage() {
   const { toast } = useToast();
   const client = mockClients.find((c) => String(c.id) === id);
 
-  const [accessLink, setAccessLink] = useState<AccessLink | undefined>(client?.accessLink);
+  const [credentials, setCredentials] = useState<CredentialsState | undefined>(client?.credentials);
   const [travelParty, setTravelParty] = useState<TravelPartyMember[]>(client?.travelParty || []);
-
-  // Email lock-edit confirmation flow (acknowledgment only — read-only display in this view)
-  const [confirmEmailEditOpen, setConfirmEmailEditOpen] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [isResend, setIsResend] = useState(false);
+  const [extraActivity, setExtraActivity] = useState<ActivityEvent[]>([]);
 
   const status = useMemo(() => client ? resolveClientStatus(client) : "Unscheduled", [client]);
 
@@ -59,13 +60,18 @@ export default function ClientProfilePage() {
   const premiumExpires = tripEnd && client.durationMonths ? addMonths(tripEnd, client.durationMonths) : null;
   const today = new Date();
 
-  type Milestone = { label: string; date: Date | null; key: string };
+  type Milestone = { label: string; date: Date | null; key: string; note?: string };
   const milestones: Milestone[] = [
     { key: "created", label: "Account Created", date: accountCreated },
     { key: "unlock", label: "Premium Unlocks", date: premiumUnlocks },
     { key: "trip-start", label: "Trip Starts", date: activeFrom },
     { key: "trip-end", label: "Trip Ends", date: tripEnd },
-    { key: "expires", label: "Premium Expires", date: premiumExpires },
+    {
+      key: "expires",
+      label: "Premium Expires",
+      date: premiumExpires,
+      note: client.durationMonths ? `Calculated as ${client.durationMonths} months after Trip End date.` : undefined,
+    },
   ];
 
   const nextIdx = milestones.findIndex((m) => m.date && m.date > today);
@@ -76,31 +82,63 @@ export default function ClientProfilePage() {
     return "bg-muted text-muted-foreground border-border";
   };
 
-  const activity: ActivityEvent[] = [
+  const credStatus = resolveCredentialsStatus({ credentials });
+
+  const baseActivity: ActivityEvent[] = [
     { date: client.date, description: "Account created", agent: "Jane Smith" },
     ...(client.trip !== "—" ? [{ date: client.date, description: `Trip assigned: ${client.trip}`, agent: "Jane Smith" }] : []),
-    ...(accessLink ? [{ date: format(parseISO(accessLink.generatedAt), "yyyy-MM-dd"), description: "Access link generated", agent: "Jane Smith" }] : []),
-    ...(accessLink?.activated ? [{ date: format(today, "yyyy-MM-dd"), description: "Client activated their account", agent: "System" }] : []),
+    ...(credentials ? [{
+      date: format(parseISO(credentials.sentAt), "yyyy-MM-dd"),
+      description: (credentials.resentCount && credentials.resentCount > 0)
+        ? "Credentials email resent"
+        : "Credentials email sent",
+      agent: "Jane Smith",
+    }] : []),
+    ...(credentials?.activated ? [{ date: format(today, "yyyy-MM-dd"), description: "Client activated their account", agent: "System" }] : []),
     ...(status === "Active" ? [{ date: format(today, "yyyy-MM-dd"), description: "Premium access activated", agent: "System" }] : []),
   ];
+  const activity = [...baseActivity, ...extraActivity];
 
-  const handleGenerateLink = () => {
-    const slug = Math.random().toString(36).substring(2, 10);
-    setAccessLink({
-      url: `https://app.pocketguide-namibia.com/share-trip/${slug}`,
-      generatedAt: new Date().toISOString(),
-      activated: false,
-    });
-    toast({ title: "Access link generated" });
+  const openEmail = (resend: boolean) => {
+    setIsResend(resend);
+    setEmailModalOpen(true);
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Link copied to clipboard" });
+  const handleSendCredentials = (note: string) => {
+    const wasResend = isResend;
+    setCredentials({
+      sentAt: new Date().toISOString(),
+      resentCount: (credentials?.resentCount ?? 0) + (wasResend ? 1 : 0),
+      activated: credentials?.activated ?? false,
+    });
+    setExtraActivity((prev) => [
+      ...prev,
+      {
+        date: format(new Date(), "yyyy-MM-dd"),
+        description: wasResend ? "Credentials email resent" : "Credentials email sent",
+        agent: "Jane Smith",
+      },
+    ]);
+    toast({
+      title: wasResend ? "Credentials resent" : "Credentials sent",
+      description: `Email delivered to ${client.email}${note ? " with personal note" : ""}.`,
+    });
+  };
+
+  const handleTravelPartyCredEvent = (memberName: string, resend: boolean) => {
+    setExtraActivity((prev) => [
+      ...prev,
+      {
+        date: format(new Date(), "yyyy-MM-dd"),
+        description: resend
+          ? `Credentials email resent to travel party member ${memberName}`
+          : `Credentials email sent to travel party member ${memberName}`,
+        agent: "Jane Smith",
+      },
+    ]);
   };
 
   const canActivate = status === "Pending" || status === "Unscheduled";
-  const emailLocked = accessLink?.activated;
 
   return (
     <PortalLayout>
@@ -121,9 +159,12 @@ export default function ClientProfilePage() {
             </div>
             <div>
               <h1 className="font-heading text-2xl font-bold">{client.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Badge variant="outline" className={`text-xs ${statusBadgeClass[status]}`}>
                   {status}
+                </Badge>
+                <Badge variant="outline" className={`text-xs ${credentialsBadgeClass[credStatus]}`}>
+                  Credentials: {credStatus}
                 </Badge>
                 <span className="text-sm text-muted-foreground">{client.email}</span>
               </div>
@@ -134,16 +175,40 @@ export default function ClientProfilePage() {
           </Button>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — compact balanced row */}
         <Card className="border-none shadow-sm">
-          <CardContent className="p-4 flex flex-wrap gap-2 items-start">
-            {client.tripId && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`/trip-manager?edit=${client.tripId}`)}>
-                <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
-              </Button>
-            )}
+          <CardContent className="p-4 flex flex-wrap items-center gap-3 justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              {client.tripId && (
+                <Button variant="default" size="sm" onClick={() => navigate(`/trip-manager?edit=${client.tripId}`)}>
+                  <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
+                </Button>
+              )}
+              {credentials ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="default" size="sm">
+                      <Mail className="h-4 w-4 mr-1.5" /> Email Client
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => openEmail(false)}>
+                      <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openEmail(true)}>
+                      <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="default" size="sm" onClick={() => openEmail(false)}>
+                  <Mail className="h-4 w-4 mr-1.5" /> Email Client
+                </Button>
+              )}
+            </div>
+
             {canActivate && (
-              <div className="flex flex-col gap-1 ml-auto">
+              <div className="flex flex-col gap-1">
                 <Button
                   variant="outline"
                   size="sm"
@@ -159,94 +224,19 @@ export default function ClientProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Client App Access Link — primary deliverable */}
-        <Card className="border-2 border-primary/20 shadow-sm">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h2 className="font-heading text-lg font-semibold">Client App Access Link</h2>
-              {accessLink && (
-                <Badge
-                  variant="outline"
-                  className={
-                    accessLink.activated
-                      ? "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15"
-                      : "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15"
-                  }
-                >
-                  {accessLink.activated ? "Account activated" : "Awaiting activation"}
-                </Badge>
-              )}
-            </div>
-
-            {!accessLink ? (
-              <div className="flex flex-col items-center gap-3 py-6 text-center">
-                <Button size="lg" onClick={handleGenerateLink}>
-                  <LinkIcon className="h-4 w-4 mr-2" /> Generate Access Link
-                </Button>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  Generate a unique access link to share with your client. They will use this to access their premium PGN experience.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex-1 min-w-[260px] rounded-md bg-muted px-4 py-3 text-sm font-mono break-all">
-                    {accessLink.url}
-                  </div>
-                  <Button size="lg" onClick={() => handleCopy(accessLink.url)}>
-                    <Copy className="h-4 w-4 mr-2" /> Copy Link
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Generated on {format(parseISO(accessLink.generatedAt), "MMM d, yyyy 'at' HH:mm")}
-                </p>
-                <p className="text-[11px] text-muted-foreground italic">
-                  Each link can only be used to create one account. Editing the client's email will invalidate this link.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Client Details */}
           <Card className="border-none shadow-sm">
             <CardContent className="p-6 space-y-4">
               <h2 className="font-heading text-lg font-semibold">Client Details</h2>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <Detail label="First Name" value={client.firstName ?? client.name.split(" ")[0] ?? ""} />
+                <Detail label="Last Name" value={client.lastName ?? client.name.split(" ").slice(1).join(" ")} />
                 <Detail label="Title" value={client.title} />
                 <Detail label="Username" value={client.username} />
                 <Detail label="Date of Birth" value={client.dob} />
                 <Detail label="Country" value={client.country} />
-                <div>
-                  <dt className="text-xs text-muted-foreground flex items-center gap-1">
-                    Email
-                    {emailLocked && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Lock className="h-3 w-3 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            This email address is locked because the client has already activated their account. Contact PGN Super Admin if a change is required.
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </dt>
-                  <dd className="font-medium flex items-center gap-2">
-                    {client.email}
-                    {accessLink && !accessLink.activated && (
-                      <button
-                        onClick={() => setConfirmEmailEditOpen(true)}
-                        className="text-[11px] text-primary hover:underline"
-                        title="Edit email"
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </dd>
-                </div>
+                <Detail label="Email" value={client.email} />
                 <Detail label="Phone Number" value={client.phone} />
                 <Detail label="Account Created" value={client.date} />
               </dl>
@@ -284,6 +274,11 @@ export default function ClientProfilePage() {
                           <p className="text-[10px] text-muted-foreground mt-0.5">
                             {m.date ? format(m.date, "MMM d, yyyy") : "—"}
                           </p>
+                          {m.note && (
+                            <p className="text-[10px] text-muted-foreground/80 italic mt-0.5 leading-tight">
+                              {m.note}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -299,7 +294,11 @@ export default function ClientProfilePage() {
         {/* Travel Party */}
         <Card className="border-none shadow-sm">
           <CardContent className="p-6">
-            <TravelPartySection members={travelParty} onChange={setTravelParty} />
+            <TravelPartySection
+              members={travelParty}
+              onChange={setTravelParty}
+              onCredentialsEvent={handleTravelPartyCredEvent}
+            />
           </CardContent>
         </Card>
 
@@ -322,27 +321,15 @@ export default function ClientProfilePage() {
         </Card>
       </motion.div>
 
-      {/* Confirm-invalidate-on-email-edit modal (primary client) */}
-      <Dialog open={confirmEmailEditOpen} onOpenChange={setConfirmEmailEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" /> Invalidate access link?
-            </DialogTitle>
-            <DialogDescription>
-              Editing this email address will invalidate the existing access link. A new link will need to be generated. The previously generated link will no longer work. Do you want to continue?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmEmailEditOpen(false)}>Cancel</Button>
-            <Button onClick={() => {
-              setAccessLink(undefined);
-              setConfirmEmailEditOpen(false);
-              navigate(`/clients?edit=${client.id}`);
-            }}>Confirm</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Credentials email modal — primary client */}
+      <CredentialsEmailModal
+        open={emailModalOpen}
+        onOpenChange={setEmailModalOpen}
+        recipientName={client.name}
+        recipientEmail={client.email}
+        isResend={isResend}
+        onSend={handleSendCredentials}
+      />
     </PortalLayout>
   );
 }
