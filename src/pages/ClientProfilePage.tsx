@@ -190,7 +190,7 @@ export default function ClientProfilePage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={() => navigate(`/clients?edit=${client.id}`)}>
+          <Button variant="outline" onClick={() => { setEditDraft(details); setEditOpen(true); }}>
             <Edit className="h-4 w-4 mr-2" /> Edit Client Details
           </Button>
         </div>
@@ -199,10 +199,23 @@ export default function ClientProfilePage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 flex flex-wrap items-center gap-3 justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              {client.tripId && (
+              {client.tripId ? (
                 <Button variant="default" size="sm" onClick={() => navigate(`/trip-manager?edit=${client.tripId}`)}>
                   <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
                 </Button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0}>
+                        <Button variant="default" size="sm" disabled className="pointer-events-none opacity-50">
+                          <MapIcon className="h-4 w-4 mr-1.5" /> View/Edit Trip
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>No trip assigned yet — go to Trip Manager to create and assign a trip.</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {credentials ? (
                 <DropdownMenu>
@@ -250,14 +263,14 @@ export default function ClientProfilePage() {
             <CardContent className="p-6 space-y-4">
               <h2 className="font-heading text-lg font-semibold">Client Details</h2>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <Detail label="First Name" value={client.firstName ?? client.name.split(" ")[0] ?? ""} />
-                <Detail label="Last Name" value={client.lastName ?? client.name.split(" ").slice(1).join(" ")} />
-                <Detail label="Title" value={client.title} />
-                <Detail label="Username" value={client.username} />
-                <Detail label="Date of Birth" value={client.dob} />
-                <Detail label="Country" value={client.country} />
-                <Detail label="Email" value={client.email} />
-                <Detail label="Phone Number" value={client.phone} />
+                <Detail label="First Name" value={details.firstName} />
+                <Detail label="Last Name" value={details.lastName} />
+                <Detail label="Title" value={details.title} />
+                <Detail label="Username" value={details.username} />
+                <Detail label="Date of Birth" value={details.dob} />
+                <Detail label="Country" value={details.country} />
+                <Detail label="Email" value={details.email} />
+                <Detail label="Phone Number" value={details.phone} />
                 <Detail label="Account Created" value={client.date} />
               </dl>
             </CardContent>
