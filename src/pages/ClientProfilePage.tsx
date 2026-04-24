@@ -372,6 +372,15 @@ export default function ClientProfilePage() {
         </Card>
       </motion.div>
 
+      {/* Recipient choice modal */}
+      <CredentialsRecipientModal
+        open={recipientPickerOpen}
+        onOpenChange={setRecipientPickerOpen}
+        hasTravelParty={travelParty.length > 0}
+        isResend={hasSentCredentials}
+        onSelect={handleRecipientChoice}
+      />
+
       {/* Credentials email modal — primary client */}
       <CredentialsEmailModal
         open={emailModalOpen}
