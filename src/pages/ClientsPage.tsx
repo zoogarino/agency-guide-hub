@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import CredentialsEmailModal from "@/components/CredentialsEmailModal";
+import CredentialsRecipientModal, { type RecipientChoice } from "@/components/CredentialsRecipientModal";
 
 import {
   mockClients, statusBadgeClass, resolveClientStatus,
@@ -43,8 +44,10 @@ export default function ClientsPage() {
   const [dob, setDob] = useState<Date | undefined>();
   const [credOverrides, setCredOverrides] = useState<CredOverrides>({});
 
-  // Email modal state
+  // Email flow state
+  const [recipientPickerClient, setRecipientPickerClient] = useState<MockClient | null>(null);
   const [emailingClient, setEmailingClient] = useState<MockClient | null>(null);
+  const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
 
   useEffect(() => {
@@ -63,13 +66,20 @@ export default function ClientsPage() {
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
 
   const handleCreate = () => {
-    toast({ title: "Client created", description: "Use the Email Client action to send their login credentials." });
+    toast({ title: "Client created", description: "Use the Send Credentials action to send their login credentials." });
     setSheetOpen(false);
   };
 
-  const openEmail = (c: MockClient, resend: boolean) => {
-    setEmailingClient(c);
+  const openRecipientPicker = (c: MockClient, resend: boolean) => {
     setIsResend(resend);
+    setRecipientPickerClient(c);
+  };
+
+  const handleRecipientChoice = (choice: RecipientChoice) => {
+    if (!recipientPickerClient) return;
+    setEmailRecipients(choice);
+    setEmailingClient(recipientPickerClient);
+    setRecipientPickerClient(null);
   };
 
   const handleSendCredentials = (note: string) => {
