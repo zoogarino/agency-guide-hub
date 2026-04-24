@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Copy, Mail, Search, ExternalLink, CalendarIcon } from "lucide-react";
+import { Plus, Search, CalendarIcon, Mail, RefreshCw, MoreHorizontal, Info } from "lucide-react";
 import { format } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
@@ -20,24 +24,33 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import CredentialsEmailModal from "@/components/CredentialsEmailModal";
 
-import { mockClients, statusBadgeClass, resolveClientStatus } from "@/data/mockClients";
+import {
+  mockClients, statusBadgeClass, resolveClientStatus,
+  resolveCredentialsStatus, credentialsBadgeClass,
+  type MockClient, type CredentialsState,
+} from "@/data/mockClients";
+
+type CredOverrides = Record<number, CredentialsState | undefined>;
 
 export default function ClientsPage() {
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [generatedLink, setGeneratedLink] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dob, setDob] = useState<Date | undefined>();
+  const [credOverrides, setCredOverrides] = useState<CredOverrides>({});
 
-  // Open the New Client sheet automatically when navigated with ?new=1
+  // Email modal state
+  const [emailingClient, setEmailingClient] = useState<MockClient | null>(null);
+  const [isResend, setIsResend] = useState(false);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("new") === "1") {
       setSheetOpen(true);
-      // clean the query param so refreshes don't re-open
       navigate("/clients", { replace: true });
     }
   }, [location.search, navigate]);
@@ -46,15 +59,36 @@ export default function ClientsPage() {
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getCreds = (c: MockClient): CredentialsState | undefined =>
+    credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
+
   const handleCreate = () => {
-    const id = Math.random().toString(36).substring(2, 10);
-    setGeneratedLink(`app.pocketguide-namibia.com/share-trip/${id}`);
-    toast({ title: "Client created" });
+    toast({ title: "Client created", description: "Use the Email Client action to send their login credentials." });
+    setSheetOpen(false);
   };
 
-  const handleCopy = (link: string) => {
-    navigator.clipboard.writeText(`https://${link}`);
-    toast({ title: "Link copied to clipboard" });
+  const openEmail = (c: MockClient, resend: boolean) => {
+    setEmailingClient(c);
+    setIsResend(resend);
+  };
+
+  const handleSendCredentials = (note: string) => {
+    if (!emailingClient) return;
+    const existing = getCreds(emailingClient);
+    const wasResend = isResend;
+    setCredOverrides((prev) => ({
+      ...prev,
+      [emailingClient.id]: {
+        sentAt: new Date().toISOString(),
+        resentCount: (existing?.resentCount ?? 0) + (wasResend ? 1 : 0),
+        activated: existing?.activated ?? false,
+      },
+    }));
+    toast({
+      title: wasResend ? "Credentials resent" : "Credentials sent",
+      description: `Email delivered to ${emailingClient.email}${note ? " with personal note" : ""}.`,
+    });
+    setEmailingClient(null);
   };
 
   return (
@@ -123,32 +157,9 @@ export default function ClientsPage() {
                 <div className="space-y-2"><Label>Phone Number</Label><Input placeholder="+32 470 123 456" /></div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
                 <p className="text-xs text-muted-foreground">
-                  Account status is determined automatically once an "Active From" date is set in the Trip Builder.
+                  Account status is determined automatically once an "Active From" date is set in the Trip Builder. Once created, use the Email Client action in the table to send the client their login credentials.
                 </p>
                 <Button onClick={handleCreate} className="w-full">Create Client</Button>
-
-                {generatedLink && (
-                  <Card className="border-none">
-                    <CardContent className="p-4 space-y-3">
-                      <Label className="text-xs text-muted-foreground">Shareable Link</Label>
-                      <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm font-mono break-all">
-                        <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
-                        {generatedLink}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleCopy(generatedLink)}>
-                          <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Link
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Mail className="h-3.5 w-3.5 mr-1.5" /> Send via Email
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        The client will use this link to access the agency-branded version of the PGN app with their itinerary pre-loaded.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -168,77 +179,106 @@ export default function ClientsPage() {
                   <th className="px-6 py-3 font-medium">Email</th>
                   <th className="px-6 py-3 font-medium">Trip Assigned</th>
                   <th className="px-6 py-3 font-medium">Date Created</th>
-                  <th className="px-6 py-3 font-medium">App Access Link</th>
+                  <th className="px-6 py-3 font-medium">Credentials</th>
                   <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((client, i) => (
-                  <tr key={client.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <button
-                        onClick={() => navigate(`/clients/${client.id}`)}
-                        className="text-foreground hover:text-primary hover:underline transition-colors text-left"
-                      >
-                        {client.name}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{client.email}</td>
-                    <td className="px-6 py-4 text-sm">{client.trip}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{client.date}</td>
-                    <td className="px-6 py-4 text-sm">
-                      {(() => {
-                        const al = client.accessLink;
-                        if (!al) {
-                          return <span className="text-xs text-muted-foreground">Not generated</span>;
-                        }
-                        if (al.activated) {
-                          return (
-                            <Badge variant="outline" className="text-xs bg-primary/15 text-primary border-primary/30 hover:bg-primary/15">
-                              Active
-                            </Badge>
-                          );
-                        }
-                        return (
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs bg-warning/15 text-warning border-warning/30 hover:bg-warning/15">
-                              Awaiting activation
-                            </Badge>
-                            <button
-                              onClick={() => handleCopy(al.url.replace(/^https?:\/\//, ""))}
-                              className="flex items-center gap-1 text-primary hover:underline text-xs"
-                              title="Copy link"
-                            >
-                              <Copy className="h-3 w-3" /> Copy
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-6 py-4">
-                      {(() => {
-                        const status = resolveClientStatus(client);
-                        return (
-                          <div className="flex flex-col gap-1">
-                            <Badge variant="outline" className={`text-xs w-fit ${statusBadgeClass[status]}`}>
-                              {status}
-                            </Badge>
-                            {status === "Unscheduled" && (
-                              <p className="text-[11px] text-muted-foreground leading-tight max-w-[220px]">
-                                No trip assigned — go to Trip Builder to assign a trip and set an Active From date.
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((client, i) => {
+                  const creds = getCreds(client);
+                  const credStatus = resolveCredentialsStatus({ credentials: creds });
+                  const status = resolveClientStatus(client);
+                  const hasSent = !!creds;
+                  return (
+                    <tr key={client.id} className={`border-b last:border-0 transition-colors ${i % 2 === 1 ? "bg-card" : ""}`}>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/clients/${client.id}`)}
+                          className="text-foreground hover:text-primary hover:underline transition-colors text-left"
+                        >
+                          {client.name}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{client.email}</td>
+                      <td className="px-6 py-4 text-sm">{client.trip}</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{client.date}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={`text-xs ${credentialsBadgeClass[credStatus]}`}>
+                            {credStatus}
+                          </Badge>
+                          {credStatus === "Not Sent" && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  Credentials have not been sent to this client yet. Open the client profile or use the Email Client action to send their account details.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className={`text-xs w-fit ${statusBadgeClass[status]}`}>
+                            {status}
+                          </Badge>
+                          {status === "Unscheduled" && (
+                            <p className="text-[11px] text-muted-foreground leading-tight max-w-[220px]">
+                              No trip assigned — go to Trip Builder to assign a trip and set an Active From date.
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          {hasSent ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEmail(client, false)}>
+                                  <Mail className="h-3.5 w-3.5 mr-2" /> Send Credentials
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEmail(client, true)}>
+                                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Resend Credentials
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <Button variant="outline" size="sm" onClick={() => openEmail(client, false)}>
+                              <Mail className="h-3.5 w-3.5 mr-1.5" /> Email Client
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Credentials email modal */}
+      {emailingClient && (
+        <CredentialsEmailModal
+          open={!!emailingClient}
+          onOpenChange={(v) => !v && setEmailingClient(null)}
+          recipientName={emailingClient.name}
+          recipientEmail={emailingClient.email}
+          isResend={isResend}
+          onSend={handleSendCredentials}
+        />
+      )}
     </PortalLayout>
   );
 }

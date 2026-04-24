@@ -2,9 +2,18 @@ import { addDays, addMonths, differenceInDays, isAfter } from "date-fns";
 
 export type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
 
+export type CredentialsStatus = "Not Sent" | "Sent" | "Account Activated";
+
+export interface CredentialsState {
+  sentAt: string; // ISO datetime — most recent send
+  resentCount?: number;
+  activated: boolean;
+}
+
+// Legacy — retained for compatibility with any remaining references; no longer used in UI.
 export interface AccessLink {
   url: string;
-  generatedAt: string; // ISO datetime
+  generatedAt: string;
   activated: boolean;
 }
 
@@ -12,12 +21,14 @@ export interface TravelPartyMember {
   id: string;
   name: string;
   email: string;
-  link?: AccessLink;
+  credentials?: CredentialsState;
 }
 
 export interface MockClient {
   id: number;
   name: string;
+  firstName?: string;
+  lastName?: string;
   title: string;
   username: string;
   dob: string;
@@ -28,13 +39,26 @@ export interface MockClient {
   tripId?: string;
   date: string;
   link: string; // legacy plain URL fallback
-  accessLink?: AccessLink;
+  accessLink?: AccessLink; // legacy
+  credentials?: CredentialsState;
   activeFrom?: string;
   tripEndDate?: string;
   durationMonths?: 3 | 6 | 12;
   tripCompleted?: boolean;
   travelParty?: TravelPartyMember[];
 }
+
+export function resolveCredentialsStatus(c: { credentials?: CredentialsState }): CredentialsStatus {
+  if (!c.credentials) return "Not Sent";
+  if (c.credentials.activated) return "Account Activated";
+  return "Sent";
+}
+
+export const credentialsBadgeClass: Record<CredentialsStatus, string> = {
+  "Not Sent": "bg-muted text-muted-foreground border-border hover:bg-muted",
+  "Sent": "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15",
+  "Account Activated": "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15",
+};
 
 // Resolved status: includes derived state that depends on dates and the
 // 6-month loophole rule (auto-suspend back to Unscheduled if Active From
@@ -73,58 +97,47 @@ export function resolveClientStatus(client: {
 
 export const mockClients: MockClient[] = [
   {
-    id: 1, name: "Sarah Miller", title: "Ms", username: "sarahm", dob: "1988-06-12",
+    id: 1, name: "Sarah Miller", firstName: "Sarah", lastName: "Miller",
+    title: "Ms", username: "sarahm", dob: "1988-06-12",
     email: "sarah@example.com", phone: "+44 7700 900123", country: "United Kingdom",
     trip: "Etosha Explorer", tripId: "trip-etosha", date: "2026-02-20",
-    link: "app.pocketguide-namibia.com/share-trip/abc123",
-    accessLink: {
-      url: "https://app.pocketguide-namibia.com/share-trip/abc123",
-      generatedAt: "2026-04-15T14:32:00Z",
-      activated: true,
-    },
+    link: "",
+    credentials: { sentAt: "2026-04-15T14:32:00Z", activated: true },
     activeFrom: "2026-04-25", tripEndDate: "2026-05-07", durationMonths: 6,
     travelParty: [{
       id: "tp1", name: "James Miller", email: "james@example.com",
-      link: {
-        url: "https://app.pocketguide-namibia.com/share-trip/abc123-tp1",
-        generatedAt: "2026-04-15T14:35:00Z",
-        activated: false,
-      },
+      credentials: { sentAt: "2026-04-15T14:35:00Z", activated: false },
     }],
   },
   {
-    id: 2, name: "John Doe", title: "Mr", username: "johnd", dob: "1979-11-03",
+    id: 2, name: "John Doe", firstName: "John", lastName: "Doe",
+    title: "Mr", username: "johnd", dob: "1979-11-03",
     email: "john@example.com", phone: "+1 415 555 0143", country: "United States",
     trip: "Skeleton Coast Adventure", tripId: "trip-skeleton", date: "2026-02-18",
-    link: "app.pocketguide-namibia.com/share-trip/def456",
-    accessLink: {
-      url: "https://app.pocketguide-namibia.com/share-trip/def456",
-      generatedAt: "2026-04-10T09:15:00Z",
-      activated: false,
-    },
+    link: "",
+    credentials: { sentAt: "2026-04-10T09:15:00Z", activated: false },
     activeFrom: "2026-05-10", tripEndDate: "2026-05-25", durationMonths: 3,
   },
   {
-    id: 3, name: "Hans Weber", title: "Dr", username: "hansw", dob: "1965-03-22",
+    id: 3, name: "Hans Weber", firstName: "Hans", lastName: "Weber",
+    title: "Dr", username: "hansw", dob: "1965-03-22",
     email: "hans@example.com", phone: "+49 30 1234 5678", country: "Germany",
     trip: "Sossusvlei Dunes", tripId: "trip-sossus", date: "2025-07-15",
-    link: "app.pocketguide-namibia.com/share-trip/ghi789",
-    accessLink: {
-      url: "https://app.pocketguide-namibia.com/share-trip/ghi789",
-      generatedAt: "2025-07-20T11:00:00Z",
-      activated: true,
-    },
+    link: "",
+    credentials: { sentAt: "2025-07-20T11:00:00Z", activated: true },
     activeFrom: "2025-08-01", tripEndDate: "2025-08-14", durationMonths: 6,
   },
   {
-    id: 4, name: "Marie Dupont", title: "Mrs", username: "maried", dob: "1982-09-30",
+    id: 4, name: "Marie Dupont", firstName: "Marie", lastName: "Dupont",
+    title: "Mrs", username: "maried", dob: "1982-09-30",
     email: "marie@example.com", phone: "+33 6 12 34 56 78", country: "France",
     trip: "Fish River Canyon", tripId: "trip-fish", date: "2025-10-10",
-    link: "app.pocketguide-namibia.com/share-trip/jkl012",
+    link: "",
     activeFrom: "2025-10-18", tripEndDate: "2025-10-30", durationMonths: 12,
   },
   {
-    id: 5, name: "Tom Brown", title: "Mr", username: "tomb", dob: "1990-01-14",
+    id: 5, name: "Tom Brown", firstName: "Tom", lastName: "Brown",
+    title: "Mr", username: "tomb", dob: "1990-01-14",
     email: "tom@example.com", phone: "+44 7700 900456", country: "United Kingdom",
     trip: "—", date: "2026-02-08", link: "",
   },
