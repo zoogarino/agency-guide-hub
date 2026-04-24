@@ -43,6 +43,20 @@ export default function ClientProfilePage() {
   const [isResend, setIsResend] = useState(false);
   const [extraActivity, setExtraActivity] = useState<ActivityEvent[]>([]);
 
+  // Editable client details (local-only mock)
+  const [editOpen, setEditOpen] = useState(false);
+  const [details, setDetails] = useState(() => ({
+    firstName: client?.firstName ?? client?.name.split(" ")[0] ?? "",
+    lastName: client?.lastName ?? client?.name.split(" ").slice(1).join(" ") ?? "",
+    title: client?.title ?? "",
+    username: client?.username ?? "",
+    dob: client?.dob ?? "",
+    country: client?.country ?? "",
+    email: client?.email ?? "",
+    phone: client?.phone ?? "",
+  }));
+  const [editDraft, setEditDraft] = useState(details);
+
   const status = useMemo(() => client ? resolveClientStatus(client) : "Unscheduled", [client]);
 
   if (!client) {
