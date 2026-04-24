@@ -30,9 +30,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* Sidebar */}
+      {/* Sidebar — fixed, full height, independent of main scroll */}
       <aside
-        className={`flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ${
+        className={`sticky top-0 h-screen flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 shrink-0 ${
           collapsed ? "w-[68px]" : "w-[250px]"
         }`}
       >
@@ -46,8 +46,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-2 space-y-1">
+        {/* Nav — anchored to top, no flex-grow gap */}
+        <nav className="py-4 px-2 space-y-1">
           {navItems.map((item) => {
             const active = location.pathname === item.path;
             return (
@@ -67,20 +67,18 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           })}
         </nav>
 
-        {/* Agency logo placeholder */}
-        <div className="px-4 pb-3 flex items-center justify-center">
-          <img
-            src={agencyLogo}
-            alt="Agency logo"
-            loading="lazy"
-            width={collapsed ? 36 : 96}
-            height={collapsed ? 36 : 96}
-            className={`object-contain transition-all ${collapsed ? "h-9 w-9" : "h-20 w-20"}`}
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-sidebar-border p-4">
+        {/* Footer — anchored to absolute bottom */}
+        <div className="mt-auto border-t border-sidebar-border p-4">
+          <div className="flex items-center justify-center mb-3">
+            <img
+              src={agencyLogo}
+              alt="Agency logo"
+              loading="lazy"
+              width={collapsed ? 36 : 64}
+              height={collapsed ? 36 : 64}
+              className={`object-contain transition-all ${collapsed ? "h-9 w-9" : "h-14 w-14"}`}
+            />
+          </div>
           {!collapsed && (
             <div className="mb-3 flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center text-xs font-bold text-sidebar-primary shrink-0">
@@ -103,7 +101,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-8 py-4">
           <div className="flex items-center gap-4">
