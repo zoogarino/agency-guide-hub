@@ -135,12 +135,20 @@ export default function DashboardPage() {
                       >
                         <div className="mt-3 pt-3 border-t border-border space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Total Clients</span>
-                            <span className="text-sm font-semibold">24</span>
+                            <span className="text-xs text-muted-foreground">Active</span>
+                            <span className="text-sm font-semibold text-primary">{statusCounts.Active}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Active Clients (premium)</span>
-                            <span className="text-sm font-semibold">8</span>
+                            <span className="text-xs text-muted-foreground">Pending</span>
+                            <span className="text-sm font-semibold text-warning">{statusCounts.Pending}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Expired</span>
+                            <span className="text-sm font-semibold">{statusCounts.Expired}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Unscheduled</span>
+                            <span className="text-sm font-semibold">{statusCounts.Unscheduled}</span>
                           </div>
                         </div>
                       </motion.div>
