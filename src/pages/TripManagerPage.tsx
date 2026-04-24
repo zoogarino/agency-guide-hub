@@ -50,18 +50,21 @@ interface Stop { id: number; name: string; category: string; }
 interface Trip {
   id: number; name: string; type: "Template" | "Custom"; client: string;
   status: string; duration: string; distance: string; stops: number; lastUpdated: string;
+  usageCount?: number; // templates only — number of client trips created from this template
 }
 
+// Varied template examples: short / medium / long
 const mockTemplates: Trip[] = [
-  { id: 1, name: "Etosha Explorer", type: "Template", client: "", status: "", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "2 days ago" },
-  { id: 2, name: "Skeleton Coast Adventure", type: "Template", client: "", status: "", duration: "15 days", distance: "1,800 km", stops: 10, lastUpdated: "1 week ago" },
-  { id: 4, name: "Fish River Canyon", type: "Template", client: "", status: "", duration: "7 days", distance: "650 km", stops: 5, lastUpdated: "3 days ago" },
+  { id: 1, name: "Sossusvlei Quick Escape", type: "Template", client: "", status: "", duration: "5 days", distance: "520 km", stops: 4, lastUpdated: "2 days ago", usageCount: 3 },
+  { id: 2, name: "Etosha Explorer", type: "Template", client: "", status: "", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "1 week ago", usageCount: 7 },
+  { id: 4, name: "Grand Namibia Expedition", type: "Template", client: "", status: "", duration: "21 days", distance: "2,400 km", stops: 15, lastUpdated: "3 days ago", usageCount: 1 },
 ];
 
+// Naming convention: "Template Name (Client First Name)"
 const mockClientTrips: Trip[] = [
-  { id: 3, name: "Sossusvlei Dunes (Sarah)", type: "Custom", client: "Sarah Miller", status: "Active", duration: "10 days", distance: "900 km", stops: 6, lastUpdated: "1 day ago" },
-  { id: 5, name: "Windhoek City Tour (Marie)", type: "Custom", client: "Marie Dupont", status: "Active", duration: "3 days", distance: "120 km", stops: 3, lastUpdated: "5 days ago" },
-  { id: 6, name: "Etosha Custom (Hans)", type: "Custom", client: "Hans Weber", status: "Active", duration: "14 days", distance: "1,400 km", stops: 9, lastUpdated: "2 days ago" },
+  { id: 3, name: "Sossusvlei Quick Escape (Sarah)", type: "Custom", client: "Sarah Miller", status: "Active", duration: "5 days", distance: "520 km", stops: 4, lastUpdated: "1 day ago" },
+  { id: 5, name: "Etosha Explorer (Marie)", type: "Custom", client: "Marie Dupont", status: "Pending", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "5 days ago" },
+  { id: 6, name: "Etosha Explorer (Hans)", type: "Custom", client: "Hans Weber", status: "Expired", duration: "12 days", distance: "1,200 km", stops: 8, lastUpdated: "2 days ago" },
   { id: 7, name: "Southern Namibia Draft", type: "Custom", client: "Unassigned", status: "Draft", duration: "8 days", distance: "700 km", stops: 5, lastUpdated: "1 week ago" },
 ];
 
