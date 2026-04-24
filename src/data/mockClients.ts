@@ -2,9 +2,18 @@ import { addDays, addMonths, differenceInDays, isAfter } from "date-fns";
 
 export type ClientStatus = "Pending" | "Active" | "Expired" | "Unscheduled";
 
+export type CredentialsStatus = "Not Sent" | "Sent" | "Account Activated";
+
+export interface CredentialsState {
+  sentAt: string; // ISO datetime — most recent send
+  resentCount?: number;
+  activated: boolean;
+}
+
+// Legacy — retained for compatibility with any remaining references; no longer used in UI.
 export interface AccessLink {
   url: string;
-  generatedAt: string; // ISO datetime
+  generatedAt: string;
   activated: boolean;
 }
 
@@ -12,12 +21,14 @@ export interface TravelPartyMember {
   id: string;
   name: string;
   email: string;
-  link?: AccessLink;
+  credentials?: CredentialsState;
 }
 
 export interface MockClient {
   id: number;
   name: string;
+  firstName?: string;
+  lastName?: string;
   title: string;
   username: string;
   dob: string;
@@ -28,13 +39,26 @@ export interface MockClient {
   tripId?: string;
   date: string;
   link: string; // legacy plain URL fallback
-  accessLink?: AccessLink;
+  accessLink?: AccessLink; // legacy
+  credentials?: CredentialsState;
   activeFrom?: string;
   tripEndDate?: string;
   durationMonths?: 3 | 6 | 12;
   tripCompleted?: boolean;
   travelParty?: TravelPartyMember[];
 }
+
+export function resolveCredentialsStatus(c: { credentials?: CredentialsState }): CredentialsStatus {
+  if (!c.credentials) return "Not Sent";
+  if (c.credentials.activated) return "Account Activated";
+  return "Sent";
+}
+
+export const credentialsBadgeClass: Record<CredentialsStatus, string> = {
+  "Not Sent": "bg-muted text-muted-foreground border-border hover:bg-muted",
+  "Sent": "bg-warning/15 text-warning border-warning/30 hover:bg-warning/15",
+  "Account Activated": "bg-primary/15 text-primary border-primary/30 hover:bg-primary/15",
+};
 
 // Resolved status: includes derived state that depends on dates and the
 // 6-month loophole rule (auto-suspend back to Unscheduled if Active From
