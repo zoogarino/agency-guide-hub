@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   Map,
-  Settings,
   MapPin,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +17,6 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Clients", icon: Users, path: "/clients" },
   { label: "Trip Manager", icon: Map, path: "/trip-manager" },
-  { label: "Map Settings", icon: Settings, path: "/map-settings" },
   { label: "Request a Pin", icon: MapPin, path: "/request-pin" },
   { label: "Settings", icon: Cog, path: "/settings" },
 ];
