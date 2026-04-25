@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft,
+  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft, Copy, Info,
   Users, FileText, AlertCircle, CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -22,7 +22,12 @@ import {
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import TravelPartySection from "@/components/TravelPartySection";
