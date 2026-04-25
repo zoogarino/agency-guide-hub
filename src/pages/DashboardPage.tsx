@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, Compass } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { differenceInDays, parseISO, addDays, isAfter, isBefore } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
