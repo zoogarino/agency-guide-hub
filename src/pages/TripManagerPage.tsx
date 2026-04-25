@@ -593,6 +593,11 @@ function TripEditor({
                         mode="single"
                         selected={activeFrom}
                         onSelect={handleActiveFromChange}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
@@ -631,7 +636,7 @@ function TripEditor({
                       />
                     </PopoverContent>
                   </Popover>
-                  <p className="text-[11px] text-muted-foreground">Required for the premium expiry calculation.</p>
+                  <p className="text-[11px] text-muted-foreground">Records when your client's trip ends. Used to track clients who are currently traveling in Namibia.</p>
                 </div>
               </CardContent>
             </Card>
