@@ -139,6 +139,17 @@ export default function DashboardPage() {
                             <span className="text-xs text-muted-foreground">Active</span>
                             <span className="text-sm font-semibold text-primary">{statusCounts.Active}</span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate("/clients?filter=traveling");
+                            }}
+                            className="flex w-full items-center justify-between pl-4 hover:underline"
+                          >
+                            <span className="text-[11px] text-primary">Currently in Namibia</span>
+                            <span className="text-xs font-semibold text-primary">{currentlyTravelingCount}</span>
+                          </button>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Pending</span>
                             <span className="text-sm font-semibold text-warning">{statusCounts.Pending}</span>
