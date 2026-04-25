@@ -443,16 +443,39 @@ function TripList({
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onCopyTrip(trip)} aria-label="Copy"><Copy className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Copy trip — assign to another client</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View in Web"><Globe className="h-4 w-4" /></Button>
                                 </TooltipTrigger>
                                 <TooltipContent>View in Web — web preview as the client sees it</TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete trip</TooltipContent>
-                              </Tooltip>
+                              {trip.status === "Active" ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span tabIndex={0}>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-40 pointer-events-none" aria-label="Delete disabled" disabled>
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    This trip cannot be deleted while the client is active. Go to the Trip Builder and set the trip status to Inactive first.
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setTripToDelete(trip)} aria-label="Delete">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete trip</TooltipContent>
+                                </Tooltip>
+                              )}
                             </TooltipProvider>
                           </div>
                         </td>
