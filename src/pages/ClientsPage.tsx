@@ -60,17 +60,31 @@ export default function ClientsPage() {
   const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
 
+  const params = new URLSearchParams(location.search);
+  const travelingFilter = params.get("filter") === "traveling";
+
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
     if (params.get("new") === "1") {
       setSheetOpen(true);
       navigate("/clients", { replace: true });
     }
   }, [location.search, navigate]);
 
-  const filtered = mockClients.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const today = new Date();
+  const filtered = useMemo(() => {
+    let list = mockClients.filter(
+      (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+    );
+    if (travelingFilter) {
+      list = list.filter((c) => {
+        if (!c.activeFrom || !c.tripEndDate) return false;
+        const start = parseISO(c.activeFrom);
+        const end = parseISO(c.tripEndDate);
+        return !isAfter(start, today) && !isBefore(end, today);
+      });
+    }
+    return list;
+  }, [search, travelingFilter]);
 
   const getCreds = (c: MockClient): CredentialsState | undefined =>
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
