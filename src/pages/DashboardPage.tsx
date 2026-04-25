@@ -22,12 +22,13 @@ export default function DashboardPage() {
 
   const today = new Date();
 
-  const outdatedClients = useMemo(() => {
+  const currentlyTravelingCount = useMemo(() => {
     return mockClients.filter((c) => {
-      if (!c.activeFrom || c.tripCompleted) return false;
-      const days = differenceInDays(today, parseISO(c.activeFrom));
-      return days > 150; // > 5 months
-    });
+      if (!c.activeFrom || !c.tripEndDate) return false;
+      const start = parseISO(c.activeFrom);
+      const end = parseISO(c.tripEndDate);
+      return !isAfter(start, today) && !isBefore(end, today);
+    }).length;
   }, []);
 
   // Status breakdown across all clients
