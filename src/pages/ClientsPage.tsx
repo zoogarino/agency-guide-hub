@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, CalendarIcon, Mail, RefreshCw, AlertTriangle, MoreHorizontal, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Search, CalendarIcon, Mail, RefreshCw, AlertTriangle, MoreHorizontal, Trash2, X } from "lucide-react";
+import { format, parseISO, isAfter, isBefore } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
