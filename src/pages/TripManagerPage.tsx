@@ -910,6 +910,11 @@ export default function TripManagerPage() {
   // Create from template flow
   const [selectTemplateModal, setSelectTemplateModal] = useState(false);
 
+  // Copy Trip flow
+  const [copyModalTrip, setCopyModalTrip] = useState<Trip | null>(null);
+  const [copyOriginalName, setCopyOriginalName] = useState("");
+  const [copyClientName, setCopyClientName] = useState("");
+
   // Auto-open create flow when navigated with ?new=1
   const location = useLocation();
   const navigate = useNavigate();
@@ -920,7 +925,6 @@ export default function TripManagerPage() {
       setAutoOpenCreate(true);
       navigate("/trip-manager", { replace: true });
     } else if (params.get("edit")) {
-      // Open client trip editor when navigated with ?edit=<tripId> from a Client Profile
       setEditorMode("client");
       setView("editor");
       navigate("/trip-manager", { replace: true });
@@ -949,6 +953,19 @@ export default function TripManagerPage() {
     setUseForClientModal(true);
   };
 
+  const handleCopyTrip = (trip: Trip) => {
+    setCopyModalTrip(trip);
+  };
+
+  const handleCopyClientChosen = (clientName: string) => {
+    if (!copyModalTrip) return;
+    setCopyOriginalName(copyModalTrip.name);
+    setCopyClientName(clientName);
+    setCopyModalTrip(null);
+    setEditorMode("copy");
+    setView("editor");
+  };
+
   return (
     <PortalLayout>
       {view === "list" ? (
@@ -960,6 +977,7 @@ export default function TripManagerPage() {
             onCreateClientFromScratch={() => { setEditorMode("client"); setView("editor"); }}
             onUseForClient={handleUseForClient}
             onCreateClientFromTemplate={handleCreateClientFromTemplate}
+            onCopyTrip={handleCopyTrip}
             autoOpenCreate={autoOpenCreate}
           />
           <UseForClientModal
@@ -973,13 +991,26 @@ export default function TripManagerPage() {
             onClose={() => setSelectTemplateModal(false)}
             onSelect={handleTemplateSelectedForClient}
           />
+          <CopyTripModal
+            open={!!copyModalTrip}
+            onClose={() => setCopyModalTrip(null)}
+            originalTripName={copyModalTrip?.name || ""}
+            onCopy={handleCopyClientChosen}
+          />
         </>
       ) : (
         <TripEditor
           onBack={() => setView("list")}
           editorMode={editorMode}
           templateName={editorMode === "customize" ? customizeTemplateName : undefined}
-          clientName={editorMode === "customize" ? customizeClientName : undefined}
+          clientName={
+            editorMode === "customize"
+              ? customizeClientName
+              : editorMode === "copy"
+                ? copyClientName
+                : undefined
+          }
+          originalTripName={editorMode === "copy" ? copyOriginalName : undefined}
         />
       )}
     </PortalLayout>
