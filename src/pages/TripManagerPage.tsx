@@ -525,14 +525,32 @@ function TripList({
 
 /* ───────── Trip Editor ───────── */
 function TripEditor({
-  onBack, editorMode, templateName, clientName,
+  onBack, editorMode, templateName, clientName, originalTripName,
 }: {
-  onBack: () => void; editorMode: EditorMode; templateName?: string; clientName?: string;
+  onBack: () => void;
+  editorMode: EditorMode;
+  templateName?: string;
+  clientName?: string;
+  /** When editorMode === "copy", the name of the trip being duplicated. */
+  originalTripName?: string;
 }) {
   const { toast } = useToast();
-  const [tripName, setTripName] = useState(editorMode === "customize" && templateName ? `${templateName} (${clientName})` : "");
+  const initialName =
+    editorMode === "customize" && templateName
+      ? `${templateName} (${clientName})`
+      : editorMode === "copy" && originalTripName && clientName
+        ? (() => {
+            // Strip any "(OldName)" suffix from the original then append new client first name
+            const base = originalTripName.replace(/\s*\([^)]*\)\s*$/, "").trim();
+            const firstName = clientName.split(" ")[0];
+            return `${base} (${firstName})`;
+          })()
+        : "";
+  const [tripName, setTripName] = useState(initialName);
   const [description, setDescription] = useState("");
-  const [stops, setStops] = useState<Stop[]>(editorMode === "customize" ? [...defaultStops] : []);
+  const [stops, setStops] = useState<Stop[]>(
+    editorMode === "customize" || editorMode === "copy" ? [...defaultStops] : []
+  );
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
@@ -561,7 +579,7 @@ function TripEditor({
     validateActiveFrom(date);
   };
 
-  const showClientFields = editorMode === "client" || editorMode === "customize";
+  const showClientFields = editorMode === "client" || editorMode === "customize" || editorMode === "copy";
 
   const filteredPins = mockPins.filter(
     (p) => p.name.toLowerCase().includes(pinSearch.toLowerCase()) && !stops.some((s) => s.name === p.name)
@@ -586,6 +604,7 @@ function TripEditor({
     template: "Build a reusable template itinerary",
     client: "Build a custom itinerary for your client",
     customize: `Customizing for ${clientName}`,
+    copy: `Copying to ${clientName}`,
   };
 
   return (
@@ -604,10 +623,20 @@ function TripEditor({
 
       {/* Amber banner for customize mode */}
       {editorMode === "customize" && templateName && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300/50 bg-amber-50 px-5 py-3.5 text-sm text-amber-900">
-          <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 px-5 py-3.5 text-sm text-foreground">
+          <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
           <span>
             You are customizing a copy of <strong>'{templateName}'</strong> — changes here will not affect the original template.
+          </span>
+        </div>
+      )}
+
+      {/* Blue informational banner for copy mode (permanent, non-dismissible) */}
+      {editorMode === "copy" && originalTripName && clientName && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/10 px-5 py-3.5 text-sm text-foreground">
+          <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <span>
+            You are creating a copy of <strong>'{originalTripName}'</strong> for <strong>{clientName}</strong>. Changes here will not affect the original trip.
           </span>
         </div>
       )}
