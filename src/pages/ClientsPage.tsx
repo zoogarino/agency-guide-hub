@@ -224,9 +224,21 @@ export default function ClientsPage() {
           </Sheet>
         </div>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          {travelingFilter && (
+            <Badge
+              variant="outline"
+              className="bg-primary/10 text-primary border-primary/30 gap-1.5 py-1.5 px-3 cursor-pointer hover:bg-primary/15"
+              onClick={() => navigate("/clients", { replace: true })}
+            >
+              Currently in Namibia
+              <X className="h-3 w-3" />
+            </Badge>
+          )}
         </div>
 
         <Card className="border-none shadow-sm">
