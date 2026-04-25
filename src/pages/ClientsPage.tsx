@@ -14,6 +14,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
@@ -43,6 +47,12 @@ export default function ClientsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dob, setDob] = useState<Date | undefined>();
   const [credOverrides, setCredOverrides] = useState<CredOverrides>({});
+  const [clientToDelete, setClientToDelete] = useState<MockClient | null>(null);
+
+  // Create client form — email duplicate check
+  const [newEmail, setNewEmail] = useState("");
+  const emailExists = newEmail.trim().length > 0 &&
+    mockClients.some((c) => c.email.toLowerCase() === newEmail.trim().toLowerCase());
 
   // Email flow state
   const [recipientPickerClient, setRecipientPickerClient] = useState<MockClient | null>(null);
@@ -66,7 +76,9 @@ export default function ClientsPage() {
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
 
   const handleCreate = () => {
+    if (emailExists) return;
     toast({ title: "Client created", description: "Use the Send Credentials action to send their login credentials." });
+    setNewEmail("");
     setSheetOpen(false);
   };
 
@@ -170,13 +182,29 @@ export default function ClientsPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="jane@example.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    aria-invalid={emailExists}
+                    className={emailExists ? "border-destructive focus-visible:ring-destructive" : ""}
+                  />
+                  {emailExists && (
+                    <p className="text-xs text-destructive flex items-start gap-1.5 leading-tight">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>This email address is already registered in the Pocket Guide Namibia system. Please use a different email address.</span>
+                    </p>
+                  )}
+                </div>
                 <div className="space-y-2"><Label>Phone Number</Label><Input placeholder="+32 470 123 456" /></div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
                 <p className="text-xs text-muted-foreground">
                   Account status is determined automatically once an "Active From" date is set in the Trip Builder. Once created, use the Email Client action in the table to send the client their login credentials.
                 </p>
-                <Button onClick={handleCreate} className="w-full">Create Client</Button>
+                <Button onClick={handleCreate} disabled={emailExists} className="w-full">Create Client</Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -286,7 +314,7 @@ export default function ClientsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
-                                onClick={() => toast({ title: "Client deleted", description: `${client.name} was removed from your client list.` })}
+                                onClick={() => setClientToDelete(client)}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete Client
                               </DropdownMenuItem>
@@ -323,6 +351,30 @@ export default function ClientsPage() {
           onSend={handleSendCredentials}
         />
       )}
+
+      {/* Delete client confirmation */}
+      <AlertDialog open={!!clientToDelete} onOpenChange={(v) => !v && setClientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-medium text-foreground">{clientToDelete?.name}</span> from your agency portal? This will permanently remove them from your client list. Their Pocket Guide Namibia app account will not be deleted — it will be downgraded to a standard free account and all their data, saved itineraries, and account history will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                toast({ title: "Client deleted", description: `${clientToDelete?.name} was removed from your client list.` });
+                setClientToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PortalLayout>
   );
 }

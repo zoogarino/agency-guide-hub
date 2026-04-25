@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GripVertical, Search, MapPin, Tent, Coffee, Heart, AlertTriangle, Wrench,
-  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft,
+  Plus, Eye, Save, Edit, Trash2, Globe, ArrowLeft, Copy, Info,
   Users, FileText, AlertCircle, CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -22,7 +22,12 @@ import {
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import TravelPartySection from "@/components/TravelPartySection";
@@ -86,7 +91,60 @@ const defaultStops: Stop[] = [
 
 type Tab = "templates" | "client-trips";
 type View = "list" | "editor";
-type EditorMode = "template" | "client" | "customize";
+type EditorMode = "template" | "client" | "customize" | "copy";
+
+/* ───────── Copy Trip Modal ───────── */
+function CopyTripModal({
+  open, onClose, originalTripName, onCopy,
+}: { open: boolean; onClose: () => void; originalTripName: string; onCopy: (clientName: string) => void }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState("");
+  const filtered = mockClients.filter(
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+  );
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Copy Trip</DialogTitle>
+          <DialogDescription>Choose a client to assign this copy to.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 pt-2">
+          <p className="text-xs text-muted-foreground">
+            Original: <span className="font-medium text-foreground">{originalTripName}</span>
+          </p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="max-h-56 overflow-y-auto space-y-1 rounded-md border border-border">
+            {filtered.length > 0 ? filtered.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setSelected(c.name)}
+                className={`flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                  selected === c.name ? "bg-accent" : ""
+                }`}
+              >
+                <span className="font-medium">{c.name}</span>
+                <span className="text-xs text-muted-foreground">{c.email}</span>
+              </button>
+            )) : (
+              <p className="text-xs text-muted-foreground italic px-3 py-3">No clients match your search.</p>
+            )}
+          </div>
+          <button className="text-xs text-primary underline underline-offset-2 font-medium">
+            + Create new client
+          </button>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={!selected} onClick={() => { onCopy(selected); onClose(); }}>Next</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 /* ───────── Use for Client Modal ───────── */
 function UseForClientModal({
@@ -195,7 +253,7 @@ function SelectTemplateModal({
 /* ───────── Trip List (Tabbed) ───────── */
 function TripList({
   onEditTemplate, onEditClient, onCreateTemplate, onCreateClientFromScratch,
-  onUseForClient, onCreateClientFromTemplate, autoOpenCreate,
+  onUseForClient, onCreateClientFromTemplate, onCopyTrip, autoOpenCreate,
 }: {
   onEditTemplate: (id: number) => void;
   onEditClient: (id: number) => void;
@@ -203,8 +261,11 @@ function TripList({
   onCreateClientFromScratch: () => void;
   onUseForClient: (template: Trip) => void;
   onCreateClientFromTemplate: () => void;
+  onCopyTrip: (trip: Trip) => void;
   autoOpenCreate?: boolean;
 }) {
+  const { toast } = useToast();
+  const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -382,16 +443,39 @@ function TripList({
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onCopyTrip(trip)} aria-label="Copy"><Copy className="h-4 w-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Copy trip — assign to another client</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="View in Web"><Globe className="h-4 w-4" /></Button>
                                 </TooltipTrigger>
                                 <TooltipContent>View in Web — web preview as the client sees it</TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete trip</TooltipContent>
-                              </Tooltip>
+                              {trip.status === "Active" ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span tabIndex={0}>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-40 pointer-events-none" aria-label="Delete disabled" disabled>
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    This trip cannot be deleted while the client is active. Go to the Trip Builder and set the trip status to Inactive first.
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setTripToDelete(trip)} aria-label="Delete">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete trip</TooltipContent>
+                                </Tooltip>
+                              )}
                             </TooltipProvider>
                           </div>
                         </td>
@@ -412,20 +496,61 @@ function TripList({
         onFromScratch={onCreateClientFromScratch}
       />
 
+      <AlertDialog open={!!tripToDelete} onOpenChange={(v) => !v && setTripToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-medium text-foreground">{tripToDelete?.name}</span>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                toast({ title: "Trip deleted", description: `${tripToDelete?.name} was removed.` });
+                setTripToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </motion.div>
   );
 }
 
 /* ───────── Trip Editor ───────── */
 function TripEditor({
-  onBack, editorMode, templateName, clientName,
+  onBack, editorMode, templateName, clientName, originalTripName,
 }: {
-  onBack: () => void; editorMode: EditorMode; templateName?: string; clientName?: string;
+  onBack: () => void;
+  editorMode: EditorMode;
+  templateName?: string;
+  clientName?: string;
+  /** When editorMode === "copy", the name of the trip being duplicated. */
+  originalTripName?: string;
 }) {
   const { toast } = useToast();
-  const [tripName, setTripName] = useState(editorMode === "customize" && templateName ? `${templateName} (${clientName})` : "");
+  const initialName =
+    editorMode === "customize" && templateName
+      ? `${templateName} (${clientName})`
+      : editorMode === "copy" && originalTripName && clientName
+        ? (() => {
+            // Strip any "(OldName)" suffix from the original then append new client first name
+            const base = originalTripName.replace(/\s*\([^)]*\)\s*$/, "").trim();
+            const firstName = clientName.split(" ")[0];
+            return `${base} (${firstName})`;
+          })()
+        : "";
+  const [tripName, setTripName] = useState(initialName);
   const [description, setDescription] = useState("");
-  const [stops, setStops] = useState<Stop[]>(editorMode === "customize" ? [...defaultStops] : []);
+  const [stops, setStops] = useState<Stop[]>(
+    editorMode === "customize" || editorMode === "copy" ? [...defaultStops] : []
+  );
   const [pinSearch, setPinSearch] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [activeFrom, setActiveFrom] = useState<Date | undefined>();
@@ -454,7 +579,7 @@ function TripEditor({
     validateActiveFrom(date);
   };
 
-  const showClientFields = editorMode === "client" || editorMode === "customize";
+  const showClientFields = editorMode === "client" || editorMode === "customize" || editorMode === "copy";
 
   const filteredPins = mockPins.filter(
     (p) => p.name.toLowerCase().includes(pinSearch.toLowerCase()) && !stops.some((s) => s.name === p.name)
@@ -479,6 +604,7 @@ function TripEditor({
     template: "Build a reusable template itinerary",
     client: "Build a custom itinerary for your client",
     customize: `Customizing for ${clientName}`,
+    copy: `Copying to ${clientName}`,
   };
 
   return (
@@ -497,10 +623,20 @@ function TripEditor({
 
       {/* Amber banner for customize mode */}
       {editorMode === "customize" && templateName && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300/50 bg-amber-50 px-5 py-3.5 text-sm text-amber-900">
-          <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 px-5 py-3.5 text-sm text-foreground">
+          <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
           <span>
             You are customizing a copy of <strong>'{templateName}'</strong> — changes here will not affect the original template.
+          </span>
+        </div>
+      )}
+
+      {/* Blue informational banner for copy mode (permanent, non-dismissible) */}
+      {editorMode === "copy" && originalTripName && clientName && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/10 px-5 py-3.5 text-sm text-foreground">
+          <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <span>
+            You are creating a copy of <strong>'{originalTripName}'</strong> for <strong>{clientName}</strong>. Changes here will not affect the original trip.
           </span>
         </div>
       )}
@@ -593,6 +729,11 @@ function TripEditor({
                         mode="single"
                         selected={activeFrom}
                         onSelect={handleActiveFromChange}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
@@ -631,7 +772,7 @@ function TripEditor({
                       />
                     </PopoverContent>
                   </Popover>
-                  <p className="text-[11px] text-muted-foreground">Required for the premium expiry calculation.</p>
+                  <p className="text-[11px] text-muted-foreground">Records when your client's trip ends. Used to track clients who are currently traveling in Namibia.</p>
                 </div>
               </CardContent>
             </Card>
@@ -769,6 +910,11 @@ export default function TripManagerPage() {
   // Create from template flow
   const [selectTemplateModal, setSelectTemplateModal] = useState(false);
 
+  // Copy Trip flow
+  const [copyModalTrip, setCopyModalTrip] = useState<Trip | null>(null);
+  const [copyOriginalName, setCopyOriginalName] = useState("");
+  const [copyClientName, setCopyClientName] = useState("");
+
   // Auto-open create flow when navigated with ?new=1
   const location = useLocation();
   const navigate = useNavigate();
@@ -779,7 +925,6 @@ export default function TripManagerPage() {
       setAutoOpenCreate(true);
       navigate("/trip-manager", { replace: true });
     } else if (params.get("edit")) {
-      // Open client trip editor when navigated with ?edit=<tripId> from a Client Profile
       setEditorMode("client");
       setView("editor");
       navigate("/trip-manager", { replace: true });
@@ -808,6 +953,19 @@ export default function TripManagerPage() {
     setUseForClientModal(true);
   };
 
+  const handleCopyTrip = (trip: Trip) => {
+    setCopyModalTrip(trip);
+  };
+
+  const handleCopyClientChosen = (clientName: string) => {
+    if (!copyModalTrip) return;
+    setCopyOriginalName(copyModalTrip.name);
+    setCopyClientName(clientName);
+    setCopyModalTrip(null);
+    setEditorMode("copy");
+    setView("editor");
+  };
+
   return (
     <PortalLayout>
       {view === "list" ? (
@@ -819,6 +977,7 @@ export default function TripManagerPage() {
             onCreateClientFromScratch={() => { setEditorMode("client"); setView("editor"); }}
             onUseForClient={handleUseForClient}
             onCreateClientFromTemplate={handleCreateClientFromTemplate}
+            onCopyTrip={handleCopyTrip}
             autoOpenCreate={autoOpenCreate}
           />
           <UseForClientModal
@@ -832,13 +991,26 @@ export default function TripManagerPage() {
             onClose={() => setSelectTemplateModal(false)}
             onSelect={handleTemplateSelectedForClient}
           />
+          <CopyTripModal
+            open={!!copyModalTrip}
+            onClose={() => setCopyModalTrip(null)}
+            originalTripName={copyModalTrip?.name || ""}
+            onCopy={handleCopyClientChosen}
+          />
         </>
       ) : (
         <TripEditor
           onBack={() => setView("list")}
           editorMode={editorMode}
           templateName={editorMode === "customize" ? customizeTemplateName : undefined}
-          clientName={editorMode === "customize" ? customizeClientName : undefined}
+          clientName={
+            editorMode === "customize"
+              ? customizeClientName
+              : editorMode === "copy"
+                ? copyClientName
+                : undefined
+          }
+          originalTripName={editorMode === "copy" ? copyOriginalName : undefined}
         />
       )}
     </PortalLayout>
