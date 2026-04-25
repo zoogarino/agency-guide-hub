@@ -14,6 +14,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
@@ -43,6 +47,12 @@ export default function ClientsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dob, setDob] = useState<Date | undefined>();
   const [credOverrides, setCredOverrides] = useState<CredOverrides>({});
+  const [clientToDelete, setClientToDelete] = useState<MockClient | null>(null);
+
+  // Create client form — email duplicate check
+  const [newEmail, setNewEmail] = useState("");
+  const emailExists = newEmail.trim().length > 0 &&
+    mockClients.some((c) => c.email.toLowerCase() === newEmail.trim().toLowerCase());
 
   // Email flow state
   const [recipientPickerClient, setRecipientPickerClient] = useState<MockClient | null>(null);
@@ -66,7 +76,9 @@ export default function ClientsPage() {
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
 
   const handleCreate = () => {
+    if (emailExists) return;
     toast({ title: "Client created", description: "Use the Send Credentials action to send their login credentials." });
+    setNewEmail("");
     setSheetOpen(false);
   };
 
