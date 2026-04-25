@@ -91,7 +91,60 @@ const defaultStops: Stop[] = [
 
 type Tab = "templates" | "client-trips";
 type View = "list" | "editor";
-type EditorMode = "template" | "client" | "customize";
+type EditorMode = "template" | "client" | "customize" | "copy";
+
+/* ───────── Copy Trip Modal ───────── */
+function CopyTripModal({
+  open, onClose, originalTripName, onCopy,
+}: { open: boolean; onClose: () => void; originalTripName: string; onCopy: (clientName: string) => void }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState("");
+  const filtered = mockClients.filter(
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+  );
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Copy Trip</DialogTitle>
+          <DialogDescription>Choose a client to assign this copy to.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 pt-2">
+          <p className="text-xs text-muted-foreground">
+            Original: <span className="font-medium text-foreground">{originalTripName}</span>
+          </p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="max-h-56 overflow-y-auto space-y-1 rounded-md border border-border">
+            {filtered.length > 0 ? filtered.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setSelected(c.name)}
+                className={`flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                  selected === c.name ? "bg-accent" : ""
+                }`}
+              >
+                <span className="font-medium">{c.name}</span>
+                <span className="text-xs text-muted-foreground">{c.email}</span>
+              </button>
+            )) : (
+              <p className="text-xs text-muted-foreground italic px-3 py-3">No clients match your search.</p>
+            )}
+          </div>
+          <button className="text-xs text-primary underline underline-offset-2 font-medium">
+            + Create new client
+          </button>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={!selected} onClick={() => { onCopy(selected); onClose(); }}>Next</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 /* ───────── Use for Client Modal ───────── */
 function UseForClientModal({
