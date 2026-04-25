@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, Compass } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { differenceInDays, parseISO, format, addDays } from "date-fns";
+import { differenceInDays, parseISO, addDays, isAfter, isBefore } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { mockClients, resolveClientStatus } from "@/data/mockClients";
@@ -22,12 +22,13 @@ export default function DashboardPage() {
 
   const today = new Date();
 
-  const outdatedClients = useMemo(() => {
+  const currentlyTravelingCount = useMemo(() => {
     return mockClients.filter((c) => {
-      if (!c.activeFrom || c.tripCompleted) return false;
-      const days = differenceInDays(today, parseISO(c.activeFrom));
-      return days > 150; // > 5 months
-    });
+      if (!c.activeFrom || !c.tripEndDate) return false;
+      const start = parseISO(c.activeFrom);
+      const end = parseISO(c.tripEndDate);
+      return !isAfter(start, today) && !isBefore(end, today);
+    }).length;
   }, []);
 
   // Status breakdown across all clients
@@ -74,6 +75,13 @@ export default function DashboardPage() {
       expandable: false,
     },
     {
+      label: "Currently Traveling",
+      value: String(currentlyTravelingCount),
+      icon: Compass,
+      change: currentlyTravelingCount > 0 ? "clients currently in Namibia" : "No clients currently traveling",
+      expandable: false,
+    },
+    {
       label: "Pending Pin Requests",
       value: "3",
       icon: MapPin,
@@ -91,7 +99,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -193,42 +201,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Attention Required */}
-        {outdatedClients.length > 0 && (
-          <div>
-            <h2 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Attention Required
-            </h2>
-            <Card className="border-warning/30 bg-warning/5 shadow-sm">
-              <CardContent className="p-6 space-y-4">
-                <p className="text-sm">
-                  The following clients have trip start dates that may be outdated. Please review and update their Active From date to avoid automatic premium expiry.
-                </p>
-                <ul className="divide-y divide-warning/20 rounded-md border border-warning/20 bg-background">
-                  {outdatedClients.map((c) => (
-                    <li key={c.id} className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium">{c.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Active From: {c.activeFrom ? format(parseISO(c.activeFrom), "PP") : "—"}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/clients/${c.id}`)}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        Review Client →
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Recent Activity */}
         <div>
           <h2 className="font-heading text-lg font-semibold mb-4">Recent Activity</h2>
