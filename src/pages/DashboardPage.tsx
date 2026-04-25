@@ -75,13 +75,6 @@ export default function DashboardPage() {
       expandable: false,
     },
     {
-      label: "Currently Traveling",
-      value: String(currentlyTravelingCount),
-      icon: Compass,
-      change: currentlyTravelingCount > 0 ? "clients currently in Namibia" : "No clients currently traveling",
-      expandable: false,
-    },
-    {
       label: "Pending Pin Requests",
       value: "3",
       icon: MapPin,
