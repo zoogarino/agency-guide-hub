@@ -314,7 +314,7 @@ export default function ClientsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
-                                onClick={() => toast({ title: "Client deleted", description: `${client.name} was removed from your client list.` })}
+                                onClick={() => setClientToDelete(client)}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete Client
                               </DropdownMenuItem>
@@ -351,6 +351,30 @@ export default function ClientsPage() {
           onSend={handleSendCredentials}
         />
       )}
+
+      {/* Delete client confirmation */}
+      <AlertDialog open={!!clientToDelete} onOpenChange={(v) => !v && setClientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-medium text-foreground">{clientToDelete?.name}</span> from your agency portal? This will permanently remove them from your client list. Their Pocket Guide Namibia app account will not be deleted — it will be downgraded to a standard free account and all their data, saved itineraries, and account history will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                toast({ title: "Client deleted", description: `${clientToDelete?.name} was removed from your client list.` });
+                setClientToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PortalLayout>
   );
 }
