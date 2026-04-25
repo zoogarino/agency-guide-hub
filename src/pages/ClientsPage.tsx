@@ -182,13 +182,29 @@ export default function ClientsPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@example.com" /></div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="jane@example.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    aria-invalid={emailExists}
+                    className={emailExists ? "border-destructive focus-visible:ring-destructive" : ""}
+                  />
+                  {emailExists && (
+                    <p className="text-xs text-destructive flex items-start gap-1.5 leading-tight">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>This email address is already registered in the Pocket Guide Namibia system. Please use a different email address.</span>
+                    </p>
+                  )}
+                </div>
                 <div className="space-y-2"><Label>Phone Number</Label><Input placeholder="+32 470 123 456" /></div>
                 <div className="space-y-2"><Label>Country</Label><Input placeholder="Belgium" /></div>
                 <p className="text-xs text-muted-foreground">
                   Account status is determined automatically once an "Active From" date is set in the Trip Builder. Once created, use the Email Client action in the table to send the client their login credentials.
                 </p>
-                <Button onClick={handleCreate} className="w-full">Create Client</Button>
+                <Button onClick={handleCreate} disabled={emailExists} className="w-full">Create Client</Button>
               </div>
             </SheetContent>
           </Sheet>
