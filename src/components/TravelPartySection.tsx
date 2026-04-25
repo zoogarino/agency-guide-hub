@@ -21,10 +21,12 @@ interface Props {
   onChange: (members: TravelPartyMember[]) => void;
   showHelperNote?: boolean;
   onCredentialsEvent?: (memberName: string, isResend: boolean) => void;
+  /** Plan-based travel party allowance, configured by Pocket Guide Namibia Super Admin. */
+  maxMembers?: number;
 }
 
 export default function TravelPartySection({
-  members, onChange, showHelperNote, onCredentialsEvent,
+  members, onChange, showHelperNote, onCredentialsEvent, maxMembers = 2,
 }: Props) {
   const { toast } = useToast();
   const [addOpen, setAddOpen] = useState(false);
@@ -38,7 +40,7 @@ export default function TravelPartySection({
   const [emailingMember, setEmailingMember] = useState<TravelPartyMember | null>(null);
   const [isResend, setIsResend] = useState(false);
 
-  const partyFull = members.length >= 2;
+  const partyFull = members.length >= maxMembers;
 
   const handleAdd = () => {
     if (!newName.trim() || !newEmail.trim()) return;
@@ -116,7 +118,7 @@ export default function TravelPartySection({
       <div>
         <h2 className="font-heading text-lg font-semibold">Travel Party</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Add up to 2 additional members to share this client's premium app access. Travel party members are sub-accounts linked to this client and do not count toward your agency's client limit.
+          Add additional members to share this client's premium app access. The number of members allowed is determined by your subscription plan. Travel party members are sub-accounts linked to this client and do not count toward your agency's client limit.
         </p>
       </div>
 
@@ -188,7 +190,9 @@ export default function TravelPartySection({
             </span>
           </TooltipTrigger>
           {partyFull && (
-            <TooltipContent>Maximum of 2 additional travel party members reached.</TooltipContent>
+            <TooltipContent className="max-w-xs">
+              You have reached the travel party limit for your current plan. Contact Pocket Guide Namibia to upgrade your plan and allow additional members.
+            </TooltipContent>
           )}
         </Tooltip>
       </TooltipProvider>
