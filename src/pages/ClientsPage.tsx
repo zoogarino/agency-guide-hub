@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, CalendarIcon, Mail, RefreshCw, AlertTriangle, MoreHorizontal, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Search, CalendarIcon, Mail, RefreshCw, AlertTriangle, MoreHorizontal, Trash2, X } from "lucide-react";
+import { format, parseISO, isAfter, isBefore } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,17 +60,31 @@ export default function ClientsPage() {
   const [emailRecipients, setEmailRecipients] = useState<RecipientChoice>("primary");
   const [isResend, setIsResend] = useState(false);
 
+  const params = new URLSearchParams(location.search);
+  const travelingFilter = params.get("filter") === "traveling";
+
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
     if (params.get("new") === "1") {
       setSheetOpen(true);
       navigate("/clients", { replace: true });
     }
   }, [location.search, navigate]);
 
-  const filtered = mockClients.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const today = new Date();
+  const filtered = useMemo(() => {
+    let list = mockClients.filter(
+      (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+    );
+    if (travelingFilter) {
+      list = list.filter((c) => {
+        if (!c.activeFrom || !c.tripEndDate) return false;
+        const start = parseISO(c.activeFrom);
+        const end = parseISO(c.tripEndDate);
+        return !isAfter(start, today) && !isBefore(end, today);
+      });
+    }
+    return list;
+  }, [search, travelingFilter]);
 
   const getCreds = (c: MockClient): CredentialsState | undefined =>
     credOverrides[c.id] !== undefined ? credOverrides[c.id] : c.credentials;
@@ -210,9 +224,21 @@ export default function ClientsPage() {
           </Sheet>
         </div>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search clients..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          {travelingFilter && (
+            <Badge
+              variant="outline"
+              className="bg-primary/10 text-primary border-primary/30 gap-1.5 py-1.5 px-3 cursor-pointer hover:bg-primary/15"
+              onClick={() => navigate("/clients", { replace: true })}
+            >
+              Currently in Namibia
+              <X className="h-3 w-3" />
+            </Badge>
+          )}
         </div>
 
         <Card className="border-none shadow-sm">

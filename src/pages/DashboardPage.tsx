@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown, Compass } from "lucide-react";
+import { Users, Map, MapPin, Plus, ArrowRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { differenceInDays, parseISO, addDays, isAfter, isBefore } from "date-fns";
 import PortalLayout from "@/components/PortalLayout";
@@ -75,13 +75,6 @@ export default function DashboardPage() {
       expandable: false,
     },
     {
-      label: "Currently Traveling",
-      value: String(currentlyTravelingCount),
-      icon: Compass,
-      change: currentlyTravelingCount > 0 ? "clients currently in Namibia" : "No clients currently traveling",
-      expandable: false,
-    },
-    {
       label: "Pending Pin Requests",
       value: "3",
       icon: MapPin,
@@ -99,7 +92,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -146,6 +139,17 @@ export default function DashboardPage() {
                             <span className="text-xs text-muted-foreground">Active</span>
                             <span className="text-sm font-semibold text-primary">{statusCounts.Active}</span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate("/clients?filter=traveling");
+                            }}
+                            className="flex w-full items-center justify-between pl-4 hover:underline"
+                          >
+                            <span className="text-[11px] text-primary">Currently in Namibia</span>
+                            <span className="text-xs font-semibold text-primary">{currentlyTravelingCount}</span>
+                          </button>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Pending</span>
                             <span className="text-sm font-semibold text-warning">{statusCounts.Pending}</span>
