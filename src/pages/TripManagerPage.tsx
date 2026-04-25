@@ -253,7 +253,7 @@ function SelectTemplateModal({
 /* ───────── Trip List (Tabbed) ───────── */
 function TripList({
   onEditTemplate, onEditClient, onCreateTemplate, onCreateClientFromScratch,
-  onUseForClient, onCreateClientFromTemplate, autoOpenCreate,
+  onUseForClient, onCreateClientFromTemplate, onCopyTrip, autoOpenCreate,
 }: {
   onEditTemplate: (id: number) => void;
   onEditClient: (id: number) => void;
@@ -261,8 +261,11 @@ function TripList({
   onCreateClientFromScratch: () => void;
   onUseForClient: (template: Trip) => void;
   onCreateClientFromTemplate: () => void;
+  onCopyTrip: (trip: Trip) => void;
   autoOpenCreate?: boolean;
 }) {
+  const { toast } = useToast();
+  const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
   const [tab, setTab] = useState<Tab>("templates");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
